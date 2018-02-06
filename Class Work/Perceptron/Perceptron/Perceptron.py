@@ -2,17 +2,17 @@
 
 import numpy as np
 #from matplotlib import pyplot 
-#from matplotlib import pyplot as plt
-import matplotlib as plt
-#import matplotlib.pyplot as plt
+#from matplotlib import pyplot as pltpythojn
+import matplotlib #as plt
+import matplotlib.pyplot as plt
 
 
 def PlotInput(data,labels):
     for d, sample in enumerate(data):#runs for the number of items in data
         if labels[d] == 0:#labels represents Y
-            plt.scatter(sample[0],sample[1], sample=120, marker = '_', linewidths = 2)#need to modify after reinstall to just plt.scatter
+            plt.scatter(sample[0],sample[1], s=120, marker = '_', linewidths = 2)#need to modify after reinstall to just plt.scatter
         else:
-            plt.scatter(sample[0],sample[1], sample=120, marker = '+', linewidths = 2)
+            plt.scatter(sample[0],sample[1], s=120, marker = '+', linewidths = 2)
     plt.plot([-2,6],[6,0.5])#surface line g(x) = 5.5x + 8y + 37 = 0
     plt.show()
 
@@ -41,10 +41,10 @@ def perceptron(input,labels):
         errors.append(total_error) #keeps track of error across epochs
         if total_error == 0: #(i.e. all patterns correctly classified in an epoch) 
             break #jumps out of outer loop
- #   plt.pyplot(errors)
- #   plt.xlabel('Epoch')
- #   plt._pylab_helpers('Total Loss')
- #   plt.show()
+    plt.plot(errors)
+    plt.xlabel('Epoch')
+    plt.ylabel('Total Loss')
+    plt.show()
     print("\n Errors: \n",errors)
     print("Epochs: ",len(errors))
     return w
@@ -107,7 +107,7 @@ if __name__ == '__main__': #how to designate a main in python
 
     #defining the desired class labels
     Y= np.array([0,0,1,1,1])#using unipolar discrete, first two in class one, rest in class 2
-    #PlotInput(X,Y)
+    PlotInput(X,Y)
     W = perceptron(X,Y)
     print("\n weights: \n",W)
 
