@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2009
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "XORwTF", "XORwTF\XORwTF.pyproj", "{AD8B15F4-FAE4-4A60-A009-8C2B73ACA1FF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AD8B15F4-FAE4-4A60-A009-8C2B73ACA1FF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD8B15F4-FAE4-4A60-A009-8C2B73ACA1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {90DD9B0B-A1F6-4613-8AA1-11C93A43C216}
+	EndGlobalSection
+EndGlobal

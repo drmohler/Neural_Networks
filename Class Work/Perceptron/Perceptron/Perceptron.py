@@ -1,9 +1,7 @@
 #Perceptron using Hebb's Rule
 
 import numpy as np
-#from matplotlib import pyplot 
-#from matplotlib import pyplot as pltpythojn
-import matplotlib #as plt
+import matplotlib 
 import matplotlib.pyplot as plt
 
 
@@ -45,7 +43,7 @@ def perceptron(input,labels):
     plt.xlabel('Epoch')
     plt.ylabel('Total Loss')
     plt.show()
-    print("\n Errors: \n",errors)
+    print("\nErrors: \n",errors)
     print("Epochs: ",len(errors))
     return w
 
@@ -109,7 +107,7 @@ if __name__ == '__main__': #how to designate a main in python
     Y= np.array([0,0,1,1,1])#using unipolar discrete, first two in class one, rest in class 2
     PlotInput(X,Y)
     W = perceptron(X,Y)
-    print("\n weights: \n",W)
+    print("\nWeights: \n",W)
 
     #Testing 
     test_data = np.array([
