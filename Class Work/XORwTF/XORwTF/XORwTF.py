@@ -22,7 +22,17 @@ b2 = tf.Variable(tf.zeros([1],name="bias2"))
 
 #Defining the final output in the feed forward (FF) direction 
 z2 = tf.sigmoid(tf.matmul(x,w1)+b1)
-pred =tf.sigmoid(tf.matmul(z2,w2)+b2)
+pred =tf.sigmoid(tf.matmul(z2,w2)+b2) #feed output of 1st layer to 2nd and get output
+
+#Training is done using the gradient approach. i.e. minimize the error
+#Develop a cost/loss function depending on the nature of the problem. 
+#Training goal: minimize the cost function
+
+cost = tf.reduce_mean(((y*tf.log(pred))+((1-y)*tf.log(1.0-pred)))*-1) #We used sum so if divide by n we get minimal cost func (i.e. mean)
+learning_rate = 0.01 #Rate must be small (did not explain why) 
+train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)#Each training step, do gradient descent to min the cost function. 
+                                                                            #Up to here we have costructed computational graph (Always first step in TF) 
+
 if __name__ == '__main__':
 
     print("Doing things and stuff")
