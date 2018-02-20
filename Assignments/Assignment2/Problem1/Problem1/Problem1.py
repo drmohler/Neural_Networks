@@ -19,7 +19,7 @@ def ReadFileData(filename,type,featureLabels,bias):
                 featureLabels.append(row[3])    #Third Feature name
             else:
                 arrx.append([float(row[1]),float(row[2]),float(row[3]),bias]) #Read the actual data of the input features
-                if(type == "training"): #Read the desired output if the data is training data.
+                if(type == "training"): #Read the desired output if the data is training data. (checks for string equality from params)
                     arry.append(float(row[4]))
             i = i + 1
         xInput = np.array(arrx) #Create an np.array object of the input features
@@ -47,12 +47,13 @@ def GenerateRandomWeights(AugInput):
     NumberOfFeatures = len(AugInput[0]) - 1
     print("Number of Features = ",NumberOfFeatures)
     weights = np.zeros(NumberOfFeatures+1)
+    weights[0:NumberOfFeatures] = np.random.random_sample([1,NumberOfFeatures])
+    return weights
     """Write code to initialize the weight vector of NumberOfFeatures elements with random values
    in the range 0.0 to 1.0. You need to use the np.random.ramdom_sample function to generate numbers
    between 0.0 and 1.0. The weight corresponding to the bias should be initialized to zero."""
-
-
-
+    
+    
 
    #Write code to return the initialized weight vector
 
@@ -99,13 +100,14 @@ if __name__ == '__main__':
 
     #Comment the code below to examine the training and test patterns without completing the functions.
     W = GenerateRandomWeights(X)
-    W,C = PerceptronTrain(X,W,Y)
-    print(W)
-    fig2 = plt.figure("Variation of Cost with Number of Epochs")
-    plt.plot(C)
-    plt.xlabel('Epoch')
-    plt.ylabel('Cost')
-    plt.show()
+    print("W: ",W)
+    #W,C = PerceptronTrain(X,W,Y)
+    #print(W)
+    #fig2 = plt.figure("Variation of Cost with Number of Epochs")
+    #plt.plot(C)
+    #plt.xlabel('Epoch')
+    #plt.ylabel('Cost')
+    #plt.show()
 
-    YTest = EvaluatePerfmon(W,XTest)
-    print(YTest)
+    #YTest = EvaluatePerfmon(W,XTest)
+    #print(YTest)
