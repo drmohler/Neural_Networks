@@ -59,19 +59,42 @@ def GenerateRandomWeights(AugInput):
 def PerceptronTrain(AugInput,W,labels):
     learning_rate = 1.0
     #Write code to train the network and collect the value of the cost function at the end of each epoch.
+    maxEpochs = 2500 #Maximum allowable epochs
+    cost =[] #List to store the cost value at each epoch (i.e. the classification errors) 
 
-
-
+    for i in range(maxEpochs):
+        EpochCost = 0
+        ypred = [] #predicted output value
+        for j,pattern in enumerate(AugInput):
+            v = np.dot(AugInput[j],W)#Local field
+            if v > 0:
+                ypred.append(1)
+            else:
+                ypred.append(0)
+            EpochCost += abs(labels[j]-ypred[j])
+            W = W + learning_rate*(labels[j]-ypred[j])*AugInput[j]
+        cost.append(EpochCost)
+        if EpochCost == 0:
+            print("Total epochs executed: ",str(i))
+            break
     #return the trained network weight vector and the list containing the value of the cost function at the end of each epoch.
+    return W,cost
 
 
 #Function to determine the performance of the trained perceptron network.
 def EvaluatePerfmon(Weights,TestData):
     ClassLabels = [] #A list to store the determined class lables.
     #Write code to determine the class labels of the test patterns and store the class labels in the ClassLabels list.
-
-
+    for i,pattern in enumerate(TestData):
+        v = np.dot(TestData[i],Weights)
+        if v>0:
+            ClassLabels.append(0)
+        else:
+            ClassLabels.append(1)
     #write code to return the ClassLabels as np.array type.
+    ClassLabels = np.asarray(ClassLabels)#Use numpys built in function to convert to a numpy array
+    print(type(ClassLabels)) #Prove that the list has been converted to np array
+    return ClassLabels
 
 
 if __name__ == '__main__':
@@ -99,13 +122,14 @@ if __name__ == '__main__':
     #Comment the code below to examine the training and test patterns without completing the functions.
     W = GenerateRandomWeights(X)
     print("W: ",W)
-    #W,C = PerceptronTrain(X,W,Y)
-    #print(W)
-    #fig2 = plt.figure("Variation of Cost with Number of Epochs")
-    #plt.plot(C)
-    #plt.xlabel('Epoch')
-    #plt.ylabel('Cost')
+    W,C = PerceptronTrain(X,W,Y)
+    print(W)
+    fig2 = plt.figure("Variation of Cost with Number of Epochs")
+    plt.plot(C)
+    plt.xlabel('Epoch')
+    plt.ylabel('Cost')
     #plt.show()
 
-    #YTest = EvaluatePerfmon(W,XTest)
-    #print(YTest)
+    YTest = EvaluatePerfmon(W,XTest)
+    print(YTest)
+    PlotData(XTest,YTest,"Test Patterns") 
