@@ -59,4 +59,54 @@ if __name__ == '__main__':
 
     AugmentedFeatureCount = X_input.shape[1]
     print("Augmented Feature Size = : ", AugmentedFeatureCount)
-    #Now ready to do computational graph
+
+    #creating the TF computational graph
+    X = tf.placeholder(tf.float32,[None,AugmentedFeatureCount])  #'None' allows us to expand or contract number of patterns used
+    Y = tf.placeholder(tf.float32,[None,1])  #output placeholder (output is price)
+    w = tf.Variable(tf.random_normal((AugmentedFeatureCount,1)),name='weights')
+
+    #Initialize the variables
+    init = tf.global_variables_initializer()
+
+    #Tensorflow ops and input params for placeholders, cost, and optimization
+    learning_rate = 0.01
+    num_epochs = 1000
+    cost_value = [] #how cost changes at each epoch
+    pred = tf.matmul(X,w) #Does prediction with Widrow-Hoff (i.e. no activation function) | will be 1D tensor/vector
+    err = pred-Y 
+    cost = tf.reduce_mean(tf.square(err)) #does not use 1/2 coeff from notes 
+
+    #uses AutoGrad --> i.e. automatically finds gradient of cost function
+    train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(cost)
+
+    #Mean Square Error
+    mse_summary = tf.summary.scalar('MSE',cost)#Required to gather the events for the tensorboard log
+    writer = tf.summary.FileWriter("c:/tflogs_LR",tf.get_default_graph()) #writes graph without using session commands
+
+    #Training
+    with tf.Session() as sess: 
+        sess.run(init) #run initialization of variables etc.
+        for i in range(num_epochs):
+            sess.run(train_op,feed_dict={X:X_input, Y:Y_input})#Begin training with known inputs and desired outputs
+            cost_value.append(sess.run(cost,feed_dict = {X:X_input,Y:Y_input}))
+            summary_str = mse_summary.eval(feed_dict = {X:X_input,Y:Y_input})#evaluate MSE
+            writer.add_summary(summary_str,i) #write out MSE for each epoch
+        #here the network is trained, now calculate the actual value of error and predicted price
+        err_price = sess.run(err,{X:X_input,Y:Y_input})
+        pred_price = sess.run(pred,{X:X_input,Y:Y_input})
+
+    print("Mean Square Error: ", cost_value[-1])#[-1] is the last element in vector
+    plt.plot(cost_value)
+    plt.xlabel('Epochs')
+    plt.ylabel('Cost (MSE)')
+    plt.show()
+
+    plt.scatter(Y_input,pred_price)#If exactly correct, expect straight line
+    plt.xlabel('Actual House Price')
+    plt.ylabel('Prediceted House Price')
+    plt.show()
+    writer.close()
+
+    '''NOTES: This is using the linear activation function. this is continuous and 
+              gives us the monotonically decreasing cost. The scatter shows correlation
+              b/w prediction and actual prices'''
