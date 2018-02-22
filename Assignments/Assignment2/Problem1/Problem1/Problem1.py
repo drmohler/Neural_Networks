@@ -52,8 +52,6 @@ def GenerateRandomWeights(AugInput):
     """Write code to initialize the weight vector of NumberOfFeatures elements with random values
    in the range 0.0 to 1.0. You need to use the np.random.ramdom_sample function to generate numbers
    between 0.0 and 1.0. The weight corresponding to the bias should be initialized to zero."""
-    
-    
 
    #Write code to return the initialized weight vector
 
