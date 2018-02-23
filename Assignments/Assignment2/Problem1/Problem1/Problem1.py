@@ -42,6 +42,7 @@ def PlotData(Features,Labels,Title):
     ax.set_zlabel('x3')
     plt.show()
 
+
 #Function to initialize the weight vector with random values between 0.0 and 1.0
 def GenerateRandomWeights(AugInput):
     NumberOfFeatures = len(AugInput[0]) - 1
@@ -88,13 +89,52 @@ def EvaluatePerfmon(Weights,TestData):
     for i,pattern in enumerate(TestData):
         v = np.dot(TestData[i],Weights)
         if v>0:
-            ClassLabels.append(0)
-        else:
             ClassLabels.append(1)
+        else:
+            ClassLabels.append(0)
     #write code to return the ClassLabels as np.array type.
     ClassLabels = np.asarray(ClassLabels)#Use numpys built in function to convert to a numpy array
     print(type(ClassLabels)) #Prove that the list has been converted to np array
     return ClassLabels
+
+
+#Function to plot the training data and the classified features, along with the decision hypersurface
+def PlotDataWithSurface(TrainingFeatures,TestFeatures,TrainingLabels,TestLabels,Weights):    
+    fig = plt.figure('Classified Test Features and Training Data')     #Create a figure object
+    ax = fig.add_subplot(111, projection='3d')  #Create a subplot with 3D projection
+    
+    #Plot training data 
+    for d, sample in enumerate(TrainingFeatures):
+        if TrainingLabels[d] == 0:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'red', marker = "_",linewidth = 2)
+        else:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'blue', marker = "+",linewidth = 2)
+
+    #Plot classified test features
+    for t, sample in enumerate(TestFeatures):
+        if TestLabels[t] == 0:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'green', marker = "_",linewidth = 2)
+        else:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'cyan', marker = "+",linewidth = 2)
+
+    #Generate planar equation from trained weights
+    den = -Weights[2]
+    coeffs =np.array([Weights[0]/den, Weights[1]/den,-Weights[3]/den])
+    print('Equation: Z=', str(coeffs[0]),'X +',str(coeffs[1]),'Y +',str(coeffs[2])) 
+     
+    vals = np.linspace(-2,2)
+    X,Y = np.meshgrid(vals,vals)
+    Z = np.zeros(np.shape(X))
+    
+    for i in range(len(X)):
+        Z[i] = coeffs[0]*X[i]+coeffs[1]*Y[i]+coeffs[2] #Equation of the hypersurface (plane) 
+    
+    ax.plot_surface(X,Y,Z)
+    ax.view_init(elev=1,azim=-31)
+    ax.set_xlabel('x1')
+    ax.set_ylabel('x2')
+    ax.set_zlabel('x3')
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -110,7 +150,7 @@ if __name__ == '__main__':
     print("Desired Class Membership")
     print(Y)    #Print the desired output of input pattern
 
-    PlotData(X,Y,"Training Patterns")   #Plots the input patterns in 3D.
+    #PlotData(X,Y,"Training Patterns")   #Plots the input patterns in 3D.
 
     #Reading test patterns
     XTest,YTest = ReadFileData(TestPatternFile,"",FeatureNames,bias_value)
@@ -121,15 +161,17 @@ if __name__ == '__main__':
 
     #Comment the code below to examine the training and test patterns without completing the functions.
     W = GenerateRandomWeights(X)
-    print("W: ",W)
+    print("Initial Weights: ",W)
     W,C = PerceptronTrain(X,W,Y)
-    print(W)
+    print("Trained Weights: ",W)
     fig2 = plt.figure("Variation of Cost with Number of Epochs")
     plt.plot(C)
     plt.xlabel('Epoch')
     plt.ylabel('Cost')
-    #plt.show()
+    plt.show()
 
     YTest = EvaluatePerfmon(W,XTest)
-    print(YTest)
+    print("Class Membership: ", YTest)
     PlotData(XTest,YTest,"Test Patterns") 
+    PlotDataWithSurface(X,XTest,Y,YTest,W) #custom function for plotting training and classified data together
+    
