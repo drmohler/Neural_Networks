@@ -36,7 +36,6 @@ def PlotData(Features,Labels,Title):
             ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'red', marker = "_",linewidth = 2)
         else:
             ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'blue', marker = "+",linewidth = 2)
-    
     ax.set_xlabel('x1')
     ax.set_ylabel('x2')
     ax.set_zlabel('x3')
@@ -49,12 +48,13 @@ def GenerateRandomWeights(AugInput):
     print("Number of Features = ",NumberOfFeatures)
     weights = np.zeros(NumberOfFeatures+1)
     weights[0:NumberOfFeatures] = np.random.random_sample([1,NumberOfFeatures])
-    return weights
+   
     """Write code to initialize the weight vector of NumberOfFeatures elements with random values
    in the range 0.0 to 1.0. You need to use the np.random.ramdom_sample function to generate numbers
    between 0.0 and 1.0. The weight corresponding to the bias should be initialized to zero."""
 
    #Write code to return the initialized weight vector
+    return weights
 
 #Function to train the perceptron
 def PerceptronTrain(AugInput,W,labels):
