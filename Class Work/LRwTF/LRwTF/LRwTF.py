@@ -110,3 +110,5 @@ if __name__ == '__main__':
     '''NOTES: This is using the linear activation function. this is continuous and 
               gives us the monotonically decreasing cost. The scatter shows correlation
               b/w prediction and actual prices'''
+
+              #TESTS
