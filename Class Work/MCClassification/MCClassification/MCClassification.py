@@ -34,7 +34,7 @@ def PlotDigits(data,DigitCount):
 def WeightsAndBiases(FeatureDim,ClassDim):
     X = tf.placeholder(tf.float32,[None,FeatureDim]) # placeholder for input, 'None' means we can hold whatever size the training or test data is
     Y = tf.placeholder(tf.float32,[None,ClassDim])   # same idea for output
-    w = tf.placeholder(tf.float32,[FeatureDim,ClassDim],stddev=.01,name='weights')
+    w = tf.Variable(tf.random_normal([FeatureDim,ClassDim],stddev=0.01),name='weights')
     b = tf.Variable(tf.random_normal([ClassDim]),name='bias_weights') # WTF W/ THE DIMENSION? Tensor flow only needs the dimension of the bias for the OUTPUT LAYER
     return X,Y,w,b
 
@@ -55,7 +55,6 @@ def MultiClassCost(output,Y):
     # Here is the built in function that does everything in the comments above, logits are the unnormalized y from the forward pass func
     # To clarify, this function does both the feed forward portion of the network AND the softmax
     cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = output,labels = Y))
-
     return cost
 
 #Initialization
@@ -85,7 +84,7 @@ if __name__ == '__main__':
     Y_Pred = ForwardPass(w,b,X)
     cost = MultiClassCost(Y_Pred,Y)
 
-    learn_rate,epochs = 0.01, 1000
+    learning_rate,epochs = 0.01,1000
     op_train = TrainingOp(learning_rate,cost)
 
     init = Init()
@@ -110,3 +109,4 @@ if __name__ == '__main__':
             # == np.argmax(TrainY,axis =1) returns index of actual class, checks if its equal to the predicted epoch.
             # this will be 0 if they're matched, and 1 if they're different, and then takes the mean from all the input
             # In htis case, a LOWER epoch means represents higher accuracey. 0 would be perfect. 
+

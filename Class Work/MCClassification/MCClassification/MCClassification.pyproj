@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>856db97c-373d-4af3-ac71-c65c16d8764c</ProjectGuid>
+    <ProjectGuid>b34e4bb6-d100-47d6-9bae-fd02dd8f6d99</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>MCClassification.py</StartupFile>
     <SearchPath>
