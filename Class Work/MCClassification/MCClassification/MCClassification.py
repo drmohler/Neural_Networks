@@ -106,7 +106,35 @@ if __name__ == '__main__':
             # of all the columns, or all the rows
             
             accuracy_epoch = np.mean(np.argmax(sess.run(Y_Pred,feed_dict = {X:TrainX,Y:TrainY}),axis = 1) == np.argmax(TrainY,axis =1))
+            #tells how many digits are accurately recognized
+
             # == np.argmax(TrainY,axis =1) returns index of actual class, checks if its equal to the predicted epoch.
             # this will be 0 if they're matched, and 1 if they're different, and then takes the mean from all the input
             # In htis case, a LOWER epoch means represents higher accuracey. 0 would be perfect. 
 
+            cost_value.append(loss_epoch)
+            accuracy_value.append(accuracy_epoch)
+            if (((i+1)>=100)and ((i+1)%100 ==0)):
+                print("Epoch: ",(i+1)," loss: ", loss_epoch, " Accuracy: ", accuracy_epoch)
+        print("final training results\n\tloss: ",loss_epoch,"\tAccuracy: ",accuracy_epoch)
+
+        #Test with test patterns
+        loss_test =  sess.run(cost,feed_dict = {X:TestX,Y:TestY})
+
+        #contains the indexes so we can identify which digits are correctly classified
+        test_pred = np.argmax(sess.run(Y_Pred, feed_dict = {X:TestX,Y:TestY}),axis=1)
+
+        #TestY is a vector of 1 hots, essentially test to see if indicies match 
+        accuracy_test = np.mean(test_pred == np.argmax(TestY,axis=1))
+
+        print("Results of test data set\n\tloss: ",loss_test,"\tAccuracy: ",accuracy_test)
+        print("\n Size of test_pred:",test_pred.size)
+        input("wait here!!")
+        print("Actual digits:\t",np.argmax(TestY[0:10],axis=1))#print the first 10 digits
+        print("Predicted digits:\t",test_pred[0:10])
+
+        PlotDigits(TestX,10) #for visual confirmation
+
+        #plot the cost function on my own time
+        plt.plot(cost_value)
+        plt.show()
