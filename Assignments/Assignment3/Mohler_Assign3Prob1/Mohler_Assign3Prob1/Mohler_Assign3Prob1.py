@@ -24,10 +24,30 @@ def PlotData(features,labels,PlotTitle):
     ax.set_ylabel('x2')
     plt.show()
 
+def TrainNetwork(X_Aug,weights,labels):
+    learning_rate = 0.1
+    MaxEpochs = 750 
+    #WORK ON DEVELOPING TRAINING FUNCTIONS
+
 
 """MAIN PROGRAM BODY"""
 #-------------------------------------------------------------------------------#
 if __name__ == '__main__': 
+    design_flag = True #create a boolean flag to choose initial weights: 
+                       #True --> Design 1
+                       #False --> Design 2
+
+    if design_flag: 
+        #Design 1 weights
+        W = np.array([[2,1,5],
+                     [0,1,-2]])
+    else: 
+        #Design 2 weights
+        #[W1,W2].
+
+        W = np.array([[0,-1,1.5],
+                      [1,0,-2.5]])
+  
     X_aug = np.array([[3,1,1],
                       [4,0,1],
                       [4,-1,1],
@@ -38,7 +58,7 @@ if __name__ == '__main__':
                       [1,1,1]
                       ])
     Y = np.array([0,0,0,1,1,1,1,1]) #Class labels for input data
-    bias =  X_aug[0,2] 
-    print("bias: ",bias) 
+    bias =  X_aug[0,2]  
     print("Augmented Input Data: \n",X_aug) 
+    print("Initial Weights: \n",W)
     PlotData(X_aug,Y,"Input Patterns")
