@@ -18,7 +18,7 @@ def loadFile(df):
 # end loadFile
 
 class NeuralNetwork:
-    def __init__(self,numInput,numHidden,numOutput,seed):
+    def __init__(self,numInput,numHidden,numOutput,seed): #initialize network with given parameters
         self.ni = numInput  #Input Dimension
         self.nh = numHidden     #Number of Hidden layer Neurons
         self.no = numOutput     #Number of Output Neuroms
