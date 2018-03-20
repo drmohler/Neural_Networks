@@ -1,3 +1,5 @@
+
+3
 import tensorflow as tf
 import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
@@ -128,13 +130,9 @@ if __name__ == '__main__':
         accuracy_test = np.mean(test_pred == np.argmax(TestY,axis=1))
 
         print("Results of test data set\n\tloss: ",loss_test,"\tAccuracy: ",accuracy_test)
-        print("\n Size of test_pred:",test_pred.size)
-        input("wait here!!")
         print("Actual digits:\t",np.argmax(TestY[0:10],axis=1))#print the first 10 digits
         print("Predicted digits:\t",test_pred[0:10])
 
         PlotDigits(TestX,10) #for visual confirmation
-
-        #plot the cost function on my own time
         plt.plot(cost_value)
         plt.show()
