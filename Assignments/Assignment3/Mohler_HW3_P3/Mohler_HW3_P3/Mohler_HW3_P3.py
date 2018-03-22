@@ -48,7 +48,45 @@ def PlotData(Features,Labels,Title):
     plt.show()
 
 
-    #Function to initialize the weight vector with random values between 0.0 and 1.0
+#Function to plot the training data and the classified features, along with the decision hypersurface
+def PlotDataWithSurface(TrainingFeatures,TestFeatures,TrainingLabels,TestLabels,Weights):    
+    fig = plt.figure('Classified Test Features and Training Data')     #Create a figure object
+    ax = fig.add_subplot(111, projection='3d')  #Create a subplot with 3D projection
+    
+    ##Plot training data 
+    #for d, sample in enumerate(TrainingFeatures):
+    #    if TrainingLabels[d] == 0:
+    #        ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'red', marker = "_",linewidth = 2)
+    #    else:
+    #        ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'blue', marker = "+",linewidth = 2)
+
+    #Plot classified test features
+    for t, sample in enumerate(TestFeatures):
+        if TestLabels[t] == 0:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'green', marker = "_",linewidth = 2)
+        else:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'cyan', marker = "+",linewidth = 2)
+
+    #Generate planar equation from trained weights
+    den = -Weights[2]
+    coeffs =np.array([Weights[0]/den, Weights[1]/den,-Weights[3]/den])
+    print('Equation: Z=', str(coeffs[0]),'X +',str(coeffs[1]),'Y +',str(coeffs[2])) 
+     
+    vals = np.linspace(-2,2)
+    X,Y = np.meshgrid(vals,vals)
+    Z = np.zeros(np.shape(X))
+    
+    for i in range(len(X)):
+        Z[i] = coeffs[0]*X[i]+coeffs[1]*Y[i]+coeffs[2] #Equation of the hypersurface (plane) 
+    
+    ax.plot_surface(X,Y,Z)
+    ax.view_init(elev=1,azim=-31)
+    ax.set_xlabel('x1')
+    ax.set_ylabel('x2')
+    ax.set_zlabel('x3')
+    plt.show()
+
+#Function to initialize the weight vector with random values between 0.0 and 1.0
 def GenerateRandomWeights(AugInput):
     NumberOfFeatures = len(AugInput[0]) - 1
     print("Number of Features = ",NumberOfFeatures)
@@ -61,10 +99,11 @@ def sigmoid(v):
     y = 1/(1+math.exp(-v))
     return y
 
+#function used to implement the generalized delta rule for the continuous perceptron
 def perceptron_delta(input,W,labels):
     tol = 0.5
     maxEpochs = 1000000
-    learning_rate = 0.25
+    learning_rate = 0.8
     errors = []
     epoch_count = 0
 
@@ -95,8 +134,7 @@ def evaluate(weights,testData):
     return ClassLabels
 
 
-    
-
+#---------------------------------------------------------------MAIN IMPLEMENTATION ----------------------------------------------------------------------------#
 if __name__ == '__main__':
     bias_value = -1
     #Reading Training Data
@@ -125,11 +163,15 @@ if __name__ == '__main__':
     #Perform training of the network using delta-training rule
     print("Trained Weights: ",W)
 
+ 
+
+    YTest = evaluate(W,XTest)
+    print("Class Membership: ", YTest)
+
     fig2 = plt.figure("Variation of Cost with Number of Epochs")
     plt.plot(C)
     plt.xlabel('Epoch')
     plt.ylabel('Cost')
     plt.show()
 
-    YTest = evaluate(W,XTest)
-    print("Class Membership: ", YTest)
+    PlotDataWithSurface(X,XTest,Y,YTest,W)
