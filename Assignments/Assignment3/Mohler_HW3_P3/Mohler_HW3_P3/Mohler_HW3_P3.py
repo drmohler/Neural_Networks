@@ -4,7 +4,7 @@ EE-5410: Neural Networks
 Assignment #3: Problem 3
 Continous perceptron implementation
 """
-import math
+import math #use for exponential in sigmoid
 import numpy as np
 import matplotlib
 from matplotlib import pyplot as plt
@@ -53,12 +53,12 @@ def PlotDataWithSurface(TrainingFeatures,TestFeatures,TrainingLabels,TestLabels,
     fig = plt.figure('Classified Test Features and Training Data')     #Create a figure object
     ax = fig.add_subplot(111, projection='3d')  #Create a subplot with 3D projection
     
-    ##Plot training data 
-    #for d, sample in enumerate(TrainingFeatures):
-    #    if TrainingLabels[d] == 0:
-    #        ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'red', marker = "_",linewidth = 2)
-    #    else:
-    #        ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'blue', marker = "+",linewidth = 2)
+    #Plot training data 
+    for d, sample in enumerate(TrainingFeatures):
+        if TrainingLabels[d] == 0:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'red', marker = "_",linewidth = 2)
+        else:
+            ax.scatter(sample[0],sample[1],sample[2], s = 120, color = 'blue', marker = "+",linewidth = 2)
 
     #Plot classified test features
     for t, sample in enumerate(TestFeatures):
@@ -69,7 +69,7 @@ def PlotDataWithSurface(TrainingFeatures,TestFeatures,TrainingLabels,TestLabels,
 
     #Generate planar equation from trained weights
     den = -Weights[2]
-    coeffs =np.array([Weights[0]/den, Weights[1]/den,-Weights[3]/den])
+    coeffs =np.array([Weights[0]/den, Weights[1]/den,-Weights[3]/den]) #extract the coefficients of the equation of the format Z = ax+by+c
     print('Equation: Z=', str(coeffs[0]),'X +',str(coeffs[1]),'Y +',str(coeffs[2])) 
      
     vals = np.linspace(-2,2)
@@ -101,9 +101,9 @@ def sigmoid(v):
 
 #function used to implement the generalized delta rule for the continuous perceptron
 def perceptron_delta(input,W,labels):
-    tol = 0.5
-    maxEpochs = 1000000
-    learning_rate = 0.8
+    tol = 0.1 #tallowable tolerance for error in continuous perceptron 
+    maxEpochs = 1000000 #Large number of epochs for case with low tolerance and small learning rate 
+    learning_rate = 0.25
     errors = []
     epoch_count = 0
 
@@ -117,12 +117,14 @@ def perceptron_delta(input,W,labels):
             total_error += (labels[i]-y[i])*(labels[i]-y[i]) #(d-y)^2 
             #apply stochastic gradient to update weights with each training pattern
             W = W + learning_rate*(labels[i]-y[i])*(y[i]*(1-y[i]))*input[i] #update the weights 
-            #if (iter%10000 == 0) or ((total_error<tol)and(i==29)):
+            #uncomment to see print of every 1000th epoch and its current error 
+            #if (iter%1000 == 0) or ((total_error<tol)and(i==29)):
             #    print("Epoch = {0:},Iteration = {1:},d = {2:},y = {3:.4f}, Error = {4:.6f}".format((iter+1),(i+1),labels[i],y[i],total_error))
         errors.append(total_error)
         if total_error < tol:
             break
     print("Epoch: ", epoch_count, "\tFinal Error: ",total_error)
+    #return the weights and the sum of the squared errors (cost) 
     return W,errors
 
 def evaluate(weights,testData):
@@ -131,7 +133,7 @@ def evaluate(weights,testData):
         v = np.dot(testData[i],weights) #calculate induced local field (Net) 
         ClassLabels.append(int(np.round(sigmoid(v)))) #use sigmoid activation to obtain classifications between 0 and 1, round the value to obtain class label
     ClassLabels = np.asarray(ClassLabels)
-    return ClassLabels
+    return ClassLabels #return the classifications made by the network to the user 
 
 
 #---------------------------------------------------------------MAIN IMPLEMENTATION ----------------------------------------------------------------------------#
@@ -148,23 +150,22 @@ if __name__ == '__main__':
     print("Desired Class Membership")
     print(Y)    #Print the desired output of input pattern
 
-    #PlotData(X,Y,"Training Patterns")   #Plots the input patterns in 3D.
+    PlotData(X,Y,"Training Patterns")   #Plots the input patterns in 3D.
 
     XTest,YTest = ReadFileData(TestPatternFile,"",FeatureNames,bias_value)
     print("Augmented Test Patterns")
     print(XTest)
     print("Class Membership")
     print(YTest) #The YTest will be an emptynp.array since the program has to determine the class membership.
-    W = GenerateRandomWeights(X)
+    W = GenerateRandomWeights(X) #generate initial weights between 0 and 1 for x1 x2 and x3 
     print("Initial Weights: ",W)
 
-    W,C = perceptron_delta(X,W,Y) #pass the training patterns, random weights, and desired classification to the network
-
     #Perform training of the network using delta-training rule
+    W,C = perceptron_delta(X,W,Y) #pass the training patterns, random weights, and desired classification to the network
     print("Trained Weights: ",W)
 
  
-
+    #Pass the test patterns through the trained network and classify them 
     YTest = evaluate(W,XTest)
     print("Class Membership: ", YTest)
 
@@ -174,4 +175,4 @@ if __name__ == '__main__':
     plt.ylabel('Cost')
     plt.show()
 
-    PlotDataWithSurface(X,XTest,Y,YTest,W)
+    PlotDataWithSurface(X,XTest,Y,YTest,W) #display classified data with the given test patterns and hyper surface
