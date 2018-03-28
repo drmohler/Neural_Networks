@@ -28,6 +28,9 @@ def PlotDigits(data,DigitCount):
         a[i].imshow(np.reshape(data[i],(28,28)))
     plt.show()
 
+#create a function to shape the data vector in to 28x28 matrices
+def ReshapeData(patterns):
+    ...
 
 class NeuralNetwork: 
     def __init__(self,numInput,numHidden,numOuput,seed):
@@ -48,7 +51,16 @@ class NeuralNetwork:
         self.hBiases = np.zeros(shape=[self.nh],dtype=np.float32) #hidden biases
         self.oBiases = np.zeros(shape=[self.no],dtype=np.float32)#output biases
 
+
+        self.rnd = random.Random(seed)
+
         self.InitializeWeights()
+
+    @staticmethod
+    def ActivationOutput(v): #implement the sigmoid activation function
+        out = 1.0/(1.0 + math.exp(-v))
+        return out
+
 
     #compute the number of weights for all branches of the neural network
     @staticmethod
@@ -76,6 +88,9 @@ class NeuralNetwork:
             for j in range(self.nh):
                 self.ihWeights[i,j] = w[idx]
                 idx += 1
+
+        print("ihweights dimensions: ",self.ihWeights.shape)
+        
 
         #set the hidden bias weights
         for i in range(self.nh):
@@ -122,24 +137,220 @@ class NeuralNetwork:
 
         return result
 
-#-------------------- Main Implementation-----------------------#
+    def ComputeMSE(self,data,labels):
+        sumSquaredError = 0.0
+        x_values = np.zeros(shape=[self.ni],dtype=np.float32) #a single input pattern (784)
+        d_values = np.zeros(shape=[self.no],dtype=np.float32) # desired ouput(10) 
+
+        for i in range(len(data)):
+            for j in range(self.ni):
+                x_values[j] = data[i,j]
+            for j in range(self.no):
+                if labels[idx]==j:# look at desired integer output, in softmax want this prob to be near 1
+                    d_values[j] = 1.0  
+                else:
+                    d_values[j] = 0.0
+
+            y_values = self.ForwardPass(x_values)
+
+            for j in range(self.no):
+                err = d_values[j] - y_values[j]
+                sumSquaredError = err**2
+
+        return sumSquaredError/len(data)
+
+    def ForwardPass(self,xValues):
+        hsums = np.zeros(shape=[self.nh],dtype=np.float32) #store induced field vector I1 for hidden layer
+        osums = np.zeros(shape=[self.no],dtype=np.float32) #store induced field vector I2 for output layer
+
+        for i in range(self.ni):
+            self.iNodes[i] = xValues[i] #assign pixel values from an input pattern to each input 
+        for j in range(self.nh): #for each neuron in hidden layer perform W1*X = I1
+            for i in range(self.ni):
+                hsums[j] += self.iNodes[i]*self.ihWeights[i,j] #matrix vector multiplication
+
+        for j in range(self.nh): #include the biases in the field vector
+            hsums[j] += self.hBiases[j]
+
+        #calculate the output of the neurons in the hidden layer and store in hNodes (Y1)
+        for i in range(self.nh):
+            self.hNodes[i] = self.ActivationOutput(hsums[i])
+ 
+        #output layer local induced field
+        for j in range(self.no):
+            for i in range(self.nh):
+                osums[j] += self.hNodes[i]*self.hoWeights[i,j]
+
+        #include output layer biases
+        for i in range(self.no):
+            osums[i] +=  self.oBiases[i]
+
+        #find output of the OL
+        for i in range(self.no):
+            self.oNodes[i] = self.ActivationOutput(osums[i])
+
+        
+        return self.oNodes #return the output of the network after a completed forward pass
+
+
+    def trainNN(self,TrainData,TrainLabels,maxEpochs,learnRate):
+
+        #preallocate all necessary vectors for gradients etc.
+
+        hoGrads = np.zeros(shape=[self.nh,self.no],dtype=np.float32) #will be (# of hidden neurons) x 10 
+        obGrads = np.zeros(shape=[self.no],dtype=np.float32) #contains gradient of the output biases
+        ihGrads = np.zeros(shape=[self.ni,self.nh],dtype=np.float32) #will be  784 x (# of hidden neurons)
+        hbGrads = np.zeros(shape=[self.nh],dtype=np.float32) #contains gradient of the hidden biases
+
+        #output signals
+        oSignals = np.zeros(shape=[self.no],dtype=np.float32)
+        hSignals = np.zeros(shape=[self.nh],dtype=np.float32)
+
+        x_values = np.zeros(shape=[self.ni],dtype=np.float32) #a single input pattern (784)
+        d_values = np.zeros(shape=[self.no],dtype=np.float32) # desired ouput(10) 
+
+        numTrainItems = len(TrainData) #total number of input training patterns
+
+        indices = np.arange(numTrainItems) #vector with 0,1,2,...,n-1
+
+        
+
+        #begin training 
+        epoch = 0 
+        while(epoch<maxEpochs):  
+            self.rnd.shuffle(indices) #scramble the order in which the patterns are presented to the network
+            for i in range(numTrainItems): #for all training patterns
+                idx = indices[i]
+                for j in range(self.ni): #POTENTIAL FOR ISSUES EXTRACTING DATA CORRECTLY HERE!!!
+                    x_values[j] = TrainData[idx,j] #extract the values from a single input pattern (pixel values)
+                for j in range(self.no):
+                    if TrainLabels[idx]==j:# look at desired integer output, in softmax want this prob to be near 1
+                        d_values[j] = 1.0  
+                    else:
+                        d_values[j] = 0.0  
+                #if epoch == 0:
+                #    print("X values for first pattern: ",x_values)
+                #    print("shape of chosen pattern: ", x_values.shape) 
+                    
+                #    print("Desired outputs for first pattern: ", d_values)
+
+                FP = self.ForwardPass(x_values) #while FP is not used later, the variables internal to nn are updated by forward pass
+               
+
+                #Back Propagate the error and update weights
+
+                #local gradient of output layer
+                for j in range(self.no):
+                    O_deriv = self.oNodes[j]*(1-self.oNodes[j]) #derivative of the sigmaoid function at each output
+                    oSignals[j] =  (self.oNodes[j]-d_values[j])*O_deriv #gives delta1 (y-d)*d/dw(I2) , I2 is the inputs to oNodes
+
+                #hiddent to output gradients
+                for j in range(self.nh):
+                    for k in range(self.no): 
+                        hoGrads[j,k] = oSignals[k]*self.hNodes[j]#(y-d)*deriv*Y1
+
+                for j in range(self.no):
+                    obGrads[j] = oSignals[j] #bias = 1 so take signal as it is
+
+                for j in range(self.nh):
+                    sum = 0.0
+                    for k in range(self.no):
+                        sum += oSignals[k]*self.hoWeights[j,k]
+                    h_deriv = self.hNodes[j]*(1.0-self.hNodes[j]) 
+                    hSignals[j] = sum*h_deriv #W2^T * delta2
+
+                #hidden node weight gradients
+                for j in range(self.ni):
+                    for k in range(self.nh):
+                        ihGrads[j,k] = hSignals[k]*self.iNodes[j] #schurrs product to give delta1
+
+                #hidden node bias gradients
+                for j in range(self.nh):
+                    hbGrads[j] = hSignals[j]
+
+                #end back prop, now update weights
+                for j in range(self.ni):
+                    for k in range(self.nh):
+                        delta_wih = -1.0*learnRate*ihGrads[j,k]
+                        self.ihWeights[j,k] += delta_wih
+
+                #updateing hidden node bias
+                for j in range(self.nh):
+                    delta_whb = -1.0*learnRate*hbGrads[j]
+                    self.hBiases[j] += delta_whb
+
+                for j in range(self.nh):
+                    for k in range(self.no):
+                        delta_who = -1.0*learnRate*hoGrads[j,k]
+                        self.hoWeights[j,k] += delta_who
+                for j in range(self.no):
+                    delta_who = -1.0*learnRate*obGrads[j]
+                    self.oBiases[j] += delta_who
+            epoch += 1
+            if (epoch % 1) == 0:
+                mse = self.ComputeMSE(TrainData,TrainLabels)
+                print("Epoch: ", epoch, "MSE: ",mse)
+
+        weights = self.GetWeights()
+        return weights
+
+    def validate(self,data,labels):
+        numErrors = 0
+        x_values = np.zeros(shape=[self.ni],dtype=np.float32) #a single input pattern (784)
+        d_values = np.zeros(shape=[self.no],dtype=np.float32) # desired ouput(10) 
+        Y = np.zeros(shape=[len(data),self.no],dtype = np.float32)
+
+        for i in range(len(data)):
+            for j in range(self.ni):
+                x_values[j] = data[i,j]
+            for j in range(self.no):
+                if labels[idx]==j:# look at desired integer output, in softmax want this prob to be near 1
+                    d_values[j] = 1.0  
+                else:
+                    d_values[j] = 0.0
+
+            y_values = self.ForwardPass(x_values)
+            if i < 10:
+                print("y_values: ", y_values)
+                print("d values: ",d_values)  
+
+            #POTENTIAL ISSUE IN ASSIGNING LABELS
+            max_out = np.argmax(y_values)
+            for j in range(self.no):
+                if j == max_out:
+                    Y[i,j] = 1
+                else:
+                    Y[i,j] = 0
+            for j in range(self.no):
+                if(abs(Y[i,j] - d_values[j]) == 1):
+                    numErrors += 1
+                    break
+        return Y,numErrors
+
+
+                 
+#------------------------------------------- Main Implementation--------------------------------------------#
 
 if __name__=="__main__":
+
+    learnRate = 0.05
+    maxEpochs = 10
 
     TrainX,TrainY,TestX,TestY = readMNIST()
 
     NumInputs = TrainX.shape[1] #give 784 inputs, one for each pixel in the images
 
-    #Allow user inputs for number of hidden neurons
-    while True:
-        try:
-            NumHidden = int(input("Input desired number of neurons in the hidden layer: "))
+    ##Allow user inputs for number of hidden neurons
+    #while True:
+    #    try:
+    #        NumHidden = int(input("Input desired number of neurons in the hidden layer: "))
 
-        except ValueError:
-            print("ERROR: Number of Neurons must be an integer")
+    #    except ValueError:
+    #        print("ERROR: Number of Neurons must be an integer")
 
-        else:
-            break
+    #    else:
+    #        break
+    NumHidden = 5
     NumOutputs = np.max(TestY)+1 #Should always be 10 to represent digits 0-9
      
     print("number of classes: ",NumOutputs)
@@ -153,11 +364,23 @@ if __name__=="__main__":
 
     #since not using 1-hot gives vector of class human-readable class labels
     #i.e. if trainX is 7 then trainY is also 7
-    print("The number of class labels of Training Patterns: ",TrainY.shape)
-    print("The number of class labels of Test Patterns: ",TestY.shape) #number of test labels (10000)
+    print("The number of class labels of Training Patterns: ",TrainY.size)
+    print("The number of class labels of Test Patterns: ",TestY.size) #number of test labels (10000)
     
+    print("Shape of input patterns", TrainX.shape)
+    print("Shape of single pattern", TrainX[0].shape)
 
-    #PlotDigits(TrainX,10)
 
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
+
+    print("Beginning Network Training")
+    nn.trainNN(TrainX[0:100],TrainY,maxEpochs,learnRate)
+    print("Network Training Complete\n") 
+    print("Validating Results...\n")
+
+    Y,ErrorCount = nn.validate(TrainX,TrainY) 
+    print("Training Pattern Classification")
+    print(Y[0:10])
+    print("Number of Training Patterns Misclassified = ",ErrorCount)
+
 
