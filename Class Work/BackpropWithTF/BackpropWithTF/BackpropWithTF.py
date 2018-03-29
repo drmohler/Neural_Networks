@@ -89,6 +89,7 @@ if __name__ == '__main__':
 
     error = tf.subtract(y,d_values)
 
+    """
     localGradient_2 = tf.multiply(error,sigmoid_prime(i2)) #calculates delta 2 
 
     BiasGradient_2 = localGradient_2 #output layer biases
@@ -110,9 +111,14 @@ if __name__ == '__main__':
         tf.assign(w2,tf.subtract(w2,tf.multiply(learningRate,deltaW2))),
         tf.assign(b2,tf.subtract(b2,tf.multiply(learningRate,tf.reduce_mean(BiasGradient_2,axis=[0]))))
         ]
+        """
 
+    learningRate = tf.constant(0.05)
     cost = tf.reduce_mean(tf.square(error)) #squared error cost function (no 1/2) 
     
+    #need 50000 epochs for equal performance to the 5000 by manual 
+    step = tf.train.GradientDescentOptimizer(learningRate).minimize(cost) #replaces the entire comment block ... gave wayyyy worse error 
+
     init = tf.global_variables_initializer()
     #fills all tf.variables, remember constants and variables are DIFFERENT
 
