@@ -301,7 +301,9 @@ class NeuralNetwork:
             print("Epoch: ", epoch, "MSE: ",mse)
 
         weights = self.GetWeights()
+        print("errors: ", errors)
         plt.plot(errors)
+        plt.show()
         return weights
 
     def validate(self,data,labels):
@@ -345,8 +347,8 @@ class NeuralNetwork:
 
 if __name__=="__main__":
 
-    learnRate = 0.5
-    maxEpochs = 10
+    learnRate = 0.8
+    maxEpochs = 15
 
     TrainX,TrainY,TestX,TestY = readMNIST()
 
@@ -386,14 +388,21 @@ if __name__=="__main__":
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
 
     print("Beginning Network Training")
-    nn.trainNN(TrainX[0:500],TrainY[0:500],maxEpochs,learnRate)
+    nn.trainNN(TrainX[0:10000],TrainY[0:10000],maxEpochs,learnRate)
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
-    Y,ErrorCount = nn.validate(TrainX[0:10],TrainY[0:10]) 
+    Y,ErrorCount = nn.validate(TrainX[0:1000],TrainY[0:1000]) 
     print("First Ten Training Patterns:", TrainY[0:10]) 
     print("Training Pattern Classification")
     print(Y[0:10])
     print("Number of Training Patterns Misclassified = ",ErrorCount)
+
+    print("\nValidating Testing Data...")
+    Y,ErrorCount = nn.validate(TestX,TestY) 
+    print("Training Pattern Classification")
+    print(Y[0:10])
+    print("Number of Training Patterns Misclassified = ",ErrorCount)
+    print("The Neural Network achieved %",(ErrorCount/len(TestY))*100.0," accuracy") 
 
 
