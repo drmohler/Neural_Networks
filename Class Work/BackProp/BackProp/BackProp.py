@@ -286,6 +286,9 @@ class NeuralNetwork:
                 if(abs(Y[i,j] - d_values[j]) == 1):
                     numErrors += 1
                     break
+            print("y_values: ",y_values)
+            print("d_values: ",d_values)
+
         return Y,numErrors
 
 if __name__ == '__main__':

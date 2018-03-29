@@ -2,7 +2,6 @@
 David R Mohler
 EE 5410: Neural Networks
 Exam #1: Problem 1
-
 Classification of handwritten MNIST data with backpropagation
 """
 
@@ -60,7 +59,6 @@ class NeuralNetwork:
     def ActivationOutput(v): #implement the sigmoid activation function
         out = 1.0/(1.0 + math.exp(-v))
         return out
-
 
     #compute the number of weights for all branches of the neural network
     @staticmethod
@@ -142,7 +140,10 @@ class NeuralNetwork:
         x_values = np.zeros(shape=[self.ni],dtype=np.float32) #a single input pattern (784)
         d_values = np.zeros(shape=[self.no],dtype=np.float32) # desired ouput(10) 
 
+
+        indices = np.arange(len(data)) #vector with 0,1,2,...,n-1
         for i in range(len(data)):
+            idx = indices[i]
             for j in range(self.ni):
                 x_values[j] = data[i,j]
             for j in range(self.no):
@@ -155,8 +156,8 @@ class NeuralNetwork:
 
             for j in range(self.no):
                 err = d_values[j] - y_values[j]
-                sumSquaredError = err**2
-
+                
+                sumSquaredError += err**2
         return sumSquaredError/len(data)
 
     def ForwardPass(self,xValues):
@@ -176,7 +177,7 @@ class NeuralNetwork:
         for i in range(self.nh):
             self.hNodes[i] = self.ActivationOutput(hsums[i])
  
-        #output layer local induced field
+        #output layer local induced field (I2)
         for j in range(self.no):
             for i in range(self.nh):
                 osums[j] += self.hNodes[i]*self.hoWeights[i,j]
@@ -210,24 +211,24 @@ class NeuralNetwork:
         d_values = np.zeros(shape=[self.no],dtype=np.float32) # desired ouput(10) 
 
         numTrainItems = len(TrainData) #total number of input training patterns
-
+        print("Number of training patterns: ", numTrainItems)
         indices = np.arange(numTrainItems) #vector with 0,1,2,...,n-1
-
-        
 
         #begin training 
         epoch = 0 
         while(epoch<maxEpochs):  
-            self.rnd.shuffle(indices) #scramble the order in which the patterns are presented to the network
+           # self.rnd.shuffle(indices) #scramble the order in which the patterns are presented to the network
             for i in range(numTrainItems): #for all training patterns
                 idx = indices[i]
                 for j in range(self.ni): #POTENTIAL FOR ISSUES EXTRACTING DATA CORRECTLY HERE!!!
                     x_values[j] = TrainData[idx,j] #extract the values from a single input pattern (pixel values)
+                print("shape of extracted values: ",x_values.shape) #should be 784x1
                 for j in range(self.no):
                     if TrainLabels[idx]==j:# look at desired integer output, in softmax want this prob to be near 1
                         d_values[j] = 1.0  
                     else:
                         d_values[j] = 0.0  
+                
                 #if epoch == 0:
                 #    print("X values for first pattern: ",x_values)
                 #    print("shape of chosen pattern: ", x_values.shape) 
@@ -235,16 +236,15 @@ class NeuralNetwork:
                 #    print("Desired outputs for first pattern: ", d_values)
 
                 FP = self.ForwardPass(x_values) #while FP is not used later, the variables internal to nn are updated by forward pass
-               
 
                 #Back Propagate the error and update weights
 
                 #local gradient of output layer
                 for j in range(self.no):
-                    O_deriv = self.oNodes[j]*(1-self.oNodes[j]) #derivative of the sigmaoid function at each output
+                    O_deriv = self.oNodes[j]*(1.0-self.oNodes[j]) #derivative of the sigmaoid function at each output oNodes contains I2
                     oSignals[j] =  (self.oNodes[j]-d_values[j])*O_deriv #gives delta1 (y-d)*d/dw(I2) , I2 is the inputs to oNodes
 
-                #hiddent to output gradients
+                #hidden to output gradients
                 for j in range(self.nh):
                     for k in range(self.no): 
                         hoGrads[j,k] = oSignals[k]*self.hNodes[j]#(y-d)*deriv*Y1
@@ -300,7 +300,10 @@ class NeuralNetwork:
         d_values = np.zeros(shape=[self.no],dtype=np.float32) # desired ouput(10) 
         Y = np.zeros(shape=[len(data),self.no],dtype = np.float32)
 
+        indices = np.arange(len(data)) #vector with 0,1,2,...,n-1
+
         for i in range(len(data)):
+            idx = indices[i]
             for j in range(self.ni):
                 x_values[j] = data[i,j]
             for j in range(self.no):
@@ -310,6 +313,7 @@ class NeuralNetwork:
                     d_values[j] = 0.0
 
             y_values = self.ForwardPass(x_values)
+            
             if i < 10:
                 print("y_values: ", y_values)
                 print("d values: ",d_values)  
@@ -326,14 +330,12 @@ class NeuralNetwork:
                     numErrors += 1
                     break
         return Y,numErrors
-
-
-                 
+           
 #------------------------------------------- Main Implementation--------------------------------------------#
 
 if __name__=="__main__":
 
-    learnRate = 0.05
+    learnRate = 0.1
     maxEpochs = 10
 
     TrainX,TrainY,TestX,TestY = readMNIST()
@@ -374,11 +376,12 @@ if __name__=="__main__":
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
 
     print("Beginning Network Training")
-    nn.trainNN(TrainX[0:100],TrainY,maxEpochs,learnRate)
+    nn.trainNN(TrainX[0:500],TrainY[0:500],maxEpochs,learnRate)
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
-    Y,ErrorCount = nn.validate(TrainX,TrainY) 
+    Y,ErrorCount = nn.validate(TrainX[0:500],TrainY[0:500]) 
+    print("First Ten Training Patterns:", TrainY[0:10]) 
     print("Training Pattern Classification")
     print(Y[0:10])
     print("Number of Training Patterns Misclassified = ",ErrorCount)
