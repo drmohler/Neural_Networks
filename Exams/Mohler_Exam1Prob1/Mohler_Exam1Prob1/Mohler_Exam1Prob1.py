@@ -215,14 +215,17 @@ class NeuralNetwork:
         indices = np.arange(numTrainItems) #vector with 0,1,2,...,n-1
 
         #begin training 
+
         epoch = 0 
+        errors = []
         while(epoch<maxEpochs):  
            # self.rnd.shuffle(indices) #scramble the order in which the patterns are presented to the network
+            err_tot = 0
             for i in range(numTrainItems): #for all training patterns
                 idx = indices[i]
                 for j in range(self.ni): #POTENTIAL FOR ISSUES EXTRACTING DATA CORRECTLY HERE!!!
                     x_values[j] = TrainData[idx,j] #extract the values from a single input pattern (pixel values)
-                print("shape of extracted values: ",x_values.shape) #should be 784x1
+               
                 for j in range(self.no):
                     if TrainLabels[idx]==j:# look at desired integer output, in softmax want this prob to be near 1
                         d_values[j] = 1.0  
@@ -237,6 +240,11 @@ class NeuralNetwork:
 
                 FP = self.ForwardPass(x_values) #while FP is not used later, the variables internal to nn are updated by forward pass
 
+                #-------------Added cost block-----------#
+
+
+
+                #------------------------------------------
                 #Back Propagate the error and update weights
 
                 #local gradient of output layer
@@ -287,11 +295,13 @@ class NeuralNetwork:
                     delta_who = -1.0*learnRate*obGrads[j]
                     self.oBiases[j] += delta_who
             epoch += 1
-            if (epoch % 1) == 0:
-                mse = self.ComputeMSE(TrainData,TrainLabels)
-                print("Epoch: ", epoch, "MSE: ",mse)
+        mse = self.ComputeMSE(TrainData,TrainLabels)
+        errors.append(mse) #keep track of mse over epochs
+        if (epoch % 1) == 0:    
+            print("Epoch: ", epoch, "MSE: ",mse)
 
         weights = self.GetWeights()
+        plt.plot(errors)
         return weights
 
     def validate(self,data,labels):
@@ -335,7 +345,7 @@ class NeuralNetwork:
 
 if __name__=="__main__":
 
-    learnRate = 0.1
+    learnRate = 0.5
     maxEpochs = 10
 
     TrainX,TrainY,TestX,TestY = readMNIST()
@@ -380,7 +390,7 @@ if __name__=="__main__":
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
-    Y,ErrorCount = nn.validate(TrainX[0:500],TrainY[0:500]) 
+    Y,ErrorCount = nn.validate(TrainX[0:10],TrainY[0:10]) 
     print("First Ten Training Patterns:", TrainY[0:10]) 
     print("Training Pattern Classification")
     print(Y[0:10])
