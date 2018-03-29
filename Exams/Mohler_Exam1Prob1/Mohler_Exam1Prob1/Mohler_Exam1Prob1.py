@@ -240,11 +240,6 @@ class NeuralNetwork:
 
                 FP = self.ForwardPass(x_values) #while FP is not used later, the variables internal to nn are updated by forward pass
 
-                #-------------Added cost block-----------#
-
-
-
-                #------------------------------------------
                 #Back Propagate the error and update weights
 
                 #local gradient of output layer
@@ -295,9 +290,8 @@ class NeuralNetwork:
                     delta_who = -1.0*learnRate*obGrads[j]
                     self.oBiases[j] += delta_who
             epoch += 1
-        mse = self.ComputeMSE(TrainData,TrainLabels)
-        errors.append(mse) #keep track of mse over epochs
-        if (epoch % 1) == 0:    
+            mse = self.ComputeMSE(TrainData,TrainLabels)
+            errors.append(mse) #keep track of mse over epochs 
             print("Epoch: ", epoch, "MSE: ",mse)
 
         weights = self.GetWeights()
@@ -388,7 +382,7 @@ if __name__=="__main__":
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
 
     print("Beginning Network Training")
-    nn.trainNN(TrainX[0:10000],TrainY[0:10000],maxEpochs,learnRate)
+    nn.trainNN(TrainX[0:1000],TrainY[0:1000],maxEpochs,learnRate)
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
@@ -400,9 +394,7 @@ if __name__=="__main__":
 
     print("\nValidating Testing Data...")
     Y,ErrorCount = nn.validate(TestX,TestY) 
-    print("Training Pattern Classification")
-    print(Y[0:10])
     print("Number of Training Patterns Misclassified = ",ErrorCount)
-    print("The Neural Network achieved %",(ErrorCount/len(TestY))*100.0," accuracy") 
+    print("The Neural Network achieved %",((len(testY)-ErrorCount)/len(TestY))*100.0," accuracy") 
 
 
