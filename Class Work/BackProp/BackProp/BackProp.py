@@ -307,8 +307,8 @@ if __name__ == '__main__':
     print("Output Layer Weights\n",nn.hoWeights)
     print("Output Layer Bias Weights\n",nn.oBiases)
 
-    MaxEpochs = 200
-    learnRate = 0.05
+    MaxEpochs = 100
+    learnRate = 0.1
     print("Starting Training")
     nn.trainNN(trainDataMatrix,MaxEpochs,learnRate)
 

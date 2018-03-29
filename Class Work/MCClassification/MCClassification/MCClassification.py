@@ -133,6 +133,8 @@ if __name__ == '__main__':
         print("Actual digits:\t",np.argmax(TestY[0:10],axis=1))#print the first 10 digits
         print("Predicted digits:\t",test_pred[0:10])
 
+
+        print("The class labels of Test Patterns: ",TestY[0:10])
         PlotDigits(TestX,10) #for visual confirmation
         plt.plot(cost_value)
         plt.show()
