@@ -341,8 +341,8 @@ class NeuralNetwork:
 
 if __name__=="__main__":
 
-    learnRate = 0.8
-    maxEpochs = 15
+    learnRate = 0.75
+    maxEpochs = 7
 
     TrainX,TrainY,TestX,TestY = readMNIST()
 
@@ -382,11 +382,11 @@ if __name__=="__main__":
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
 
     print("Beginning Network Training")
-    nn.trainNN(TrainX[0:1000],TrainY[0:1000],maxEpochs,learnRate)
+    nn.trainNN(TrainX,TrainY,maxEpochs,learnRate)
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
-    Y,ErrorCount = nn.validate(TrainX[0:1000],TrainY[0:1000]) 
+    Y,ErrorCount = nn.validate(TrainX,TrainY) 
     print("First Ten Training Patterns:", TrainY[0:10]) 
     print("Training Pattern Classification")
     print(Y[0:10])
@@ -395,6 +395,6 @@ if __name__=="__main__":
     print("\nValidating Testing Data...")
     Y,ErrorCount = nn.validate(TestX,TestY) 
     print("Number of Training Patterns Misclassified = ",ErrorCount)
-    print("The Neural Network achieved %",((len(testY)-ErrorCount)/len(TestY))*100.0," accuracy") 
+    print("The Neural Network achieved %",((len(TestY)-ErrorCount)/len(TestY))*100.0," accuracy") 
 
 
