@@ -34,8 +34,8 @@ class NeuralNetwork:
         self.no = numOutput   #Number of Output Neuroms
 
         self.iNodes = np.zeros(shape=[self.ni],dtype=np.float32)   #input Neurons does not process.
-        self.hNodes1 = np.zeros(shape=[self.nh1],dtype=np.float32)   #Hidden Neurons
-        self.hNodes2 = np.zeros(shape=[self.nh2],dtype=np.float32)   #Hidden Neurons
+        self.h1Nodes = np.zeros(shape=[self.nh1],dtype=np.float32)   #Hidden Neurons
+        self.h2Nodes = np.zeros(shape=[self.nh2],dtype=np.float32)   #Hidden Neurons
         self.oNodes = np.zeros(shape=[self.no],dtype=np.float32)   #Output Neurons
 
         self.ihWeights = np.zeros(shape=[self.ni,self.nh1],dtype=np.float32)     #Hidden layer 1 Weight Matrix W1
@@ -61,12 +61,6 @@ class NeuralNetwork:
     def ActivationOutput(v): #implementation of sigmoid 
         out = 1.0/(1.0 + math.exp(-v))
         return out
-
-    @staticmethod
-    def ActivationOutputDeriv(v): #implementation of sigmoid 
-        out = ActivationOutput(v)*(1.0-ActivationOutput(v))
-        return out
-
 
     #Function to set the weights of different layers
     def SetWeights(self,w):
@@ -163,35 +157,31 @@ class NeuralNetwork:
         #compute W1*X (not including bias here) --> gives you I1 
         for j in range(self.nh1):
             for i in range(self.ni):
-                h1Sums[j] += self.iNodes[i]*self.ihWeights[i,j]#matrix vector multiplication 
+                h1Sums[j] += self.iNodes[i]*self.ihWeights[i,j]#matrix vector multiplication (X*W1)
         #Hidden Layer local induced field, now include the biases to get true I1
         for j in range(self.nh1):
             h1Sums[j] += self.h1Biases[j]
 
         #compute output of the hidden layer --> gives y1
         for j in range(self.nh1):
-            self.hNodes1[j] = self.ActivationOutput(h1Sums[j])
+            self.h1Nodes[j] = self.ActivationOutput(h1Sums[j])
 
-
-
-
-
-                    #compute W1*X (not including bias here) --> gives you I1 
+        #compute W2*Y1 (not including bias here) --> gives you I1 
         for j in range(self.nh2):
             for i in range(self.nh1):
-                h2Sums[j] += self.hNodes1[i]*self.hhWeights[i,j]#matrix vector multiplication 
+                h2Sums[j] += self.h1Nodes[i]*self.hhWeights[i,j]#matrix vector multiplication 
         #Hidden Layer local induced field, now include the biases to get true I1
         for j in range(self.nh2):
             h2Sums[j] += self.h2Biases[j]
 
-        #compute output of the hidden layer --> gives y1
+        #compute output of the hidden layer --> gives y2
         for j in range(self.nh2):
-            self.hNodes2[j] = self.ActivationOutput(h2Sums[j])
+            self.h2Nodes[j] = self.ActivationOutput(h2Sums[j])
 
-        #compute W2*Y1
+        #compute W3*Y2
         for k in range(self.no):
             for j in range(self.nh2):
-                oSums[k] += self.hNodes2[j]*self.hoWeights[j,k]
+                oSums[k] += self.h2Nodes[j]*self.hoWeights[j,k]
         
         #Output Layer local induced field, now include the biases to get true I2
         for j in range(self.no):
@@ -202,6 +192,13 @@ class NeuralNetwork:
             self.oNodes[j] = self.ActivationOutput(oSums[j])
 
         return self.oNodes 
+
+
+    """
+    LOOK AT / REWRITE THE BACK PROP PORTION OF TRAINING,
+    SPECIFICALLY NEED TO DERIVE THE GRADIENT FOR THE THIRD LAYER (MOST LIKELY
+    ISSUES ARE OCCURING HERE!!!) 
+    """
 
     #A Method to train the network
     def trainNN(self,TrainData,maxEpochs,learnRate):
@@ -235,75 +232,118 @@ class NeuralNetwork:
 
         epoch = 0
         while(epoch<MaxEpochs):
-            self.rnd.shuffle(indices)#scramble the order of the vector
+            #self.rnd.shuffle(indices)#scramble the order of the vector
             for i in range(numTrainItems):
                 idx = indices[i] #idx is the index of a training pattern, will be different in each epoch due to shuffling
                 for j in range(self.ni):#get input values for particular training patterns
                     x_values[j] = TrainData[idx,j]
                 for j in range(self.no): #get desired values for same pattern (this is done because they are combined, needs to be modified if sparate)
                     d_values[j] = TrainData[idx,self.ni+j]
-
+                if (epoch % 50 == 0) and i < 10:
+                    print("xvalues",x_values)
                 a_values = self.PerformForwardPass(x_values)
+                if (epoch % 50 == 0) and i < 10:
+                    print("after FP: ",np.round(a_values,2))
+                    print("desired: ",d_values)
+                    
 
                 #implement back propagation
                 #compute the local gradient of the output layer
                 for k in range(self.no):
-                    O_derv = (1.0 - self.oNodes[k])*self.oNodes[k] #oNodes currently contains the output Y2
-                    oSignals[k] = O_derv*(self.oNodes[k]-d_values[k])#calculates the gradient (y-d)*derv of activation
+                    O_derv = (1.0 - self.oNodes[k])*self.oNodes[k] #oNodes currently contains the output Y3
+                    oSignals[k] = O_derv*(self.oNodes[k]-d_values[k])#calculates the gradient (y-d)*derv of activation (Delta 3) 
 
-                #compute the hidden to output weight gradients using output local gradient and output of hidden units
+                #compute the hidden to output weight gradients using output local gradient and output of hidden 2 units
                 for j in range(self.nh2):
                     for k in range(self.no):
-                        hoGrads[j,k] = oSignals[k]*self.hNodes2[j] #(y-d)*derv*Y1
+                        hoGrads[j,k] = oSignals[k]*self.h2Nodes[j] #delta3*Y2 
 
                 #compute the output node bias gradients
                 for k in range(self.no):
                     obGrads[k] = oSignals[k] #bias contains 1 so just set equal to output signals
 
-
+                """ End Back prop of output layer """
 
                 #compute the local gradient of the hidden layer
                 for j in range(self.nh2):
                     sum = 0.0
                     for k in range(self.no):
-                        sum += oSignals[k]*self.hoWeights[j,k] 
-                    h_derv = (1.0 - self.hNodes2[j])*self.hNodes2[j]#derivatives of hidden nodes
-                    h2Signals[j] = sum*h_derv #contains W2^T*delta2
-
-
-                """CONTINUE HERE WITH GRAD BETWEEN HIDDEN LAYERS"""
+                        sum += oSignals[k]*self.hoWeights[j,k] #del3*W3^T
+                    h_derv = (1.0 - self.h2Nodes[j])*self.h2Nodes[j]#derivatives of hidden nodes phi'(I2)
+                    h2Signals[j] = sum*h_derv #contains W3^T*delta2
 
                 #hidden weight gradients using hidden local gradient and input to the network
-                for j in range(self.ni):
-                    for k in range(self.nh):
-                        ihGrads[j,k] = hSignals[k]*self.iNodes[j] # does schurs product and gives delta1
+                for j in range(self.nh1):
+                    for k in range(self.nh2):
+                        hhGrads[j,k] = h2Signals[k]*self.h1Nodes[j] # does schurs product and gives delta1
 
-                #hidden node bias gradients
-                for j in range(self.nh):
-                    hbGrads[j] = hSignals[j]
+                #hidden layer 2 bias gradients
+                for j in range(self.nh2):
+                    h2bGrads[j] = h2Signals[j]
+
+                """ End Back prop of Hidden layer 2 """
+
+                #compute the local gradient of the hidden layer
+                for j in range(self.nh1):
+                    sum = 0.0
+                    for k in range(self.nh2):
+                        sum += h2Signals[k]*self.hhWeights[j,k] 
+                    h_derv = (1.0 - self.h2Nodes[j])*self.h2Nodes[j]#derivatives of hidden nodes Y1
+                    h1Signals[j] = sum*h_derv #contains W2^T*delta2*phi'(I2) = delta1
+
+                 
+                #hidden weight gradients using hidden local gradient and input to the network
+                for j in range(self.ni):
+                    for k in range(self.nh1):
+                        ihGrads[j,k] = h1Signals[k]*self.iNodes[j] # does schurs product and gives delta1
+
+                #hidden layer 2 bias gradients
+                for j in range(self.nh1):
+                    h1bGrads[j] = h1Signals[j]
+
+                """ End Back prop of Hidden layer 2 (POTNENTIAL ERROR, MIGHT NEED MORE TERMS FOR GRADIENT)"""
+
 
                 #here all error is back propagated, now update weights and biases using the gradients
                 for j in range(self.ni):
-                    for k in range(self.nh):
+                    for k in range(self.nh1):
                         delta_wih = -1.0*learnRate*ihGrads[j,k]
                         self.ihWeights[j,k] += delta_wih
                 #updating hidden node bias
-                for j in range(self.nh):
-                    delta_whb = -1.0*learnRate*hbGrads[j]
-                    self.hBiases[j] += delta_whb
+                for j in range(self.nh1):
+                    delta_wh1b = -1.0*learnRate*h1bGrads[j]
+                    self.h1Biases[j] += delta_wh1b
                 
-                for j in range(self.nh):
+                for j in range(self.nh1):
+                    for k in range(self.nh2):
+                        delta_whh = -1.0*learnRate*hhGrads[j,k]
+                        self.hhWeights[j,k] += delta_whh
+                #updating hidden node bias
+                for j in range(self.nh2):
+                    delta_wh2b = -1.0*learnRate*h2bGrads[j]
+                    self.h2Biases[j] += delta_wh2b
+
+
+                for j in range(self.nh2):
                     for k in range(self.no):
                         delta_who = -1.0*learnRate*hoGrads[j,k]
                         self.hoWeights[j,k] += delta_who
-
                 for j in range(self.no):
                     delta_who = -1.0*learnRate*obGrads[j]
                     self.oBiases[j] += delta_who
+
+
             epoch += 1
-            if epoch % 10 == 0:
+            if epoch % 50 == 0:
                 mse = self.ComputeMeanSquaredError(TrainData)
-                print("Epcoh = ",epoch, "MSE = ",mse)
+                print("Epoch = ",epoch, "MSE = ",mse)
+                print("Hidden Layer 1 Weights\n",self.ihWeights)
+                print("Hidden Layer 1 Bias Weights\n",self.h1Biases)
+                print("Hidden Layer 2 Weights\n",self.hhWeights)
+                print("Hidden Layer 2 Bias Weights\n",self.h2Biases)
+                print("Output Layer Weights\n",self.hoWeights)
+                print("Output Layer Bias Weights\n",self.oBiases)
+                
 
         weights = self.GetWeights()
         return weights
@@ -326,7 +366,7 @@ class NeuralNetwork:
 
             for j in range(self.no):
                 err = d_values[j] - y_values[j]
-                sumSquaredError = err*err   #(d-y)^2
+                sumSquaredError += err*err   #(d-y)^2
 
         return sumSquaredError/len(data)
     
@@ -368,17 +408,20 @@ if __name__ == '__main__':
         print(trainDataMatrix[i])
 
     InputCount = 4      #Number of Inputs
-    HiddenCount = 5     #Number of neurons in the hidden layer
+    HiddenCount1 = 5     #Number of neurons in the hidden layer
+    HiddenCount2 = 5     #Number of neurons in the hidden layer
     OutputCount = 3     #Number of Neurons in the output layer
 
-    nn = NeuralNetwork(InputCount,HiddenCount,OutputCount,seed = 3)
-    print("Hidden Layer Weights\n",nn.ihWeights)
-    print("Hidden Layer Bias Weights\n",nn.hBiases)
+    nn = NeuralNetwork(InputCount,HiddenCount1,HiddenCount1,OutputCount,seed =  np.random.randint(0,10))
+    print("Hidden Layer 1 Weights\n",nn.ihWeights)
+    print("Hidden Layer 1 Bias Weights\n",nn.h1Biases)
+    print("Hidden Layer 2 Weights\n",nn.hhWeights)
+    print("Hidden Layer 2 Bias Weights\n",nn.h2Biases)
     print("Output Layer Weights\n",nn.hoWeights)
     print("Output Layer Bias Weights\n",nn.oBiases)
 
-    MaxEpochs = 100
-    learnRate = 0.1
+    MaxEpochs = 250
+    learnRate = 0.8
     print("Starting Training")
     nn.trainNN(trainDataMatrix,MaxEpochs,learnRate)
 
