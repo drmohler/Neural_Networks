@@ -44,8 +44,7 @@ class NeuralNetwork:
         self.hh1Weights = np.zeros(shape=[self.nh1,self.nh2],dtype=np.float32)     #Hidden layer Weight Matrix W2
         self.hh2Weights = np.zeros(shape=[self.nh2,self.nh3],dtype=np.float32)     #Hidden layer Weight Matrix W3
         self.hoWeights = np.zeros(shape=[self.nh3,self.no],dtype=np.float32)     #Output Layer Weight Matrix W4
-
-        print("hh1: ", self.hh1Weights) 
+ 
 
         self.h1Biases = np.zeros(shape=[self.nh1],dtype=np.float32)           #Bias Weights of Hidden Layer 1
         self.h2Biases = np.zeros(shape=[self.nh2],dtype=np.float32)           #Bias Weights of Hidden Layer 2
@@ -152,7 +151,7 @@ class NeuralNetwork:
                 result[idx] = self.hh2Weights[i,j]
                 idx += 1
 
-        for j in range(self.nh2):
+        for j in range(self.nh3):
             result[idx] = self.h3Biases[j]
             idx += 1
 
@@ -423,7 +422,7 @@ class NeuralNetwork:
             epoch += 1
             if epoch % 10 == 0:
                 mse = self.ComputeMeanSquaredError(TrainData)
-                print("Epoch = ",epoch, "MSE = ",mse)
+                print(mse)#"Epoch = ",epoch, "MSE = ",mse)
                 #print("Hidden Layer 1 Weights\n",self.ihWeights)
                 #print("Hidden Layer 1 Bias Weights\n",self.hBiases)
                 #print("Output Layer Weights\n",self.hoWeights)
@@ -493,19 +492,16 @@ if __name__ == '__main__':
         print(trainDataMatrix[i])
 
     InputCount = 4      #Number of Inputs
-    HiddenCount1 = 5     #Number of neurons in the hidden layer
-    HiddenCount2 = 6     #Number of neurons in the hidden layer
-    HiddenCount3 = 5     #Number of neurons in the hidden layer
+    HiddenCount1 = 10     #Number of neurons in the hidden layer
+    HiddenCount2 = 5     #Number of neurons in the hidden layer
+    HiddenCount3 = 10     #Number of neurons in the hidden layer
     OutputCount = 3     #Number of Neurons in the output layer
 
     nn = NeuralNetwork(InputCount,HiddenCount1,HiddenCount2,HiddenCount3,OutputCount,seed = 3)
-    #print("Hidden Layer Weights\n",nn.ihWeights)
-    #print("Hidden Layer Bias Weights\n",nn.hBiases)
-    #print("Output Layer Weights\n",nn.hoWeights)
-    #print("Output Layer Bias Weights\n",nn.oBiases)
 
-    MaxEpochs = 500
-    learnRate = 0.5
+
+    MaxEpochs = 1500
+    learnRate = 0.1
     print("Starting Training")
     nn.trainNN(trainDataMatrix,MaxEpochs,learnRate)
 

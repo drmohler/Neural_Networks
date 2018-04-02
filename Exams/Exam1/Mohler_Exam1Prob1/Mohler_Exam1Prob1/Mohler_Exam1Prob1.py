@@ -320,9 +320,9 @@ class NeuralNetwork:
 
             y_values = self.ForwardPass(x_values)
             
-            if i < 10:
-                print("y_values: ", y_values)
-                print("d values: ",d_values)  
+            #if i < 10:
+            #    print("y_values: ", y_values)
+            #    print("d values: ",d_values)  
 
             #POTENTIAL ISSUE IN ASSIGNING LABELS
             max_out = np.argmax(y_values)
@@ -342,7 +342,7 @@ class NeuralNetwork:
 if __name__=="__main__":
 
     learnRate = 0.8
-    maxEpochs = 7
+    maxEpochs = 15
 
     TrainX,TrainY,TestX,TestY = readMNIST()
 
@@ -358,7 +358,7 @@ if __name__=="__main__":
 
     #    else:
     #        break
-    NumHidden = 10
+    NumHidden = 5
     NumOutputs = np.max(TestY)+1 #Should always be 10 to represent digits 0-9
      
     print("number of classes: ",NumOutputs)
@@ -382,11 +382,11 @@ if __name__=="__main__":
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
 
     print("Beginning Network Training")
-    nn.trainNN(TrainX,TrainY,maxEpochs,learnRate)
+    nn.trainNN(TrainX[0:1000],TrainY[0:1000],maxEpochs,learnRate)
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
-    Y,ErrorCount = nn.validate(TrainX,TrainY) 
+    Y,ErrorCount = nn.validate(TrainX[0:1000],TrainY[0:1000]) 
     print("First Ten Training Patterns:", TrainY[0:10]) 
     print("Training Pattern Classification")
     print(Y[0:10])
