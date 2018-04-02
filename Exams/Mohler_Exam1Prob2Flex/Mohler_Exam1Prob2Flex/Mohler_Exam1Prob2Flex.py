@@ -26,30 +26,58 @@ def loadFile(df):
     return np.asarray(resultList, dtype=np.float32)
 # end loadFile
 
+def InputNetworkParameters():
+    while True:
+        try:
+            NumHiddenLayers = int(input("Input desired number of hidden layers: "))
+        except ValueError:
+            print("ERROR: Number of layers must be an integer")
+        else:
+            break
+
+    HL = np.zeros(shape = [NumHiddenLayers],dtype = np.int32) 
+    
+    for i in range(len(HL)):
+        print("Input number of neurons in Hidden Layer %d: "% int(i+1))
+        while True:
+            try:
+                HL[i] = int(input())
+            except ValueError:
+                print("ERROR: Number of neurons must be an integer")
+            else:
+                break
+    print("HL after fillling: ",HL)
+
+
+    input("wait for debugging") 
+    return HL 
+
 class NeuralNetwork:
-    def __init__(self,numInput,numHidden1,numHidden2,numHidden3,numOutput,seed):
+    def __init__(self,numInput,HL,numOutput,seed):
         self.ni = numInput  #Input Dimension
-        self.nh1 = numHidden1     #Number of Hidden layer Neurons 1
-        self.nh2 = numHidden2     #Number of Hidden layer Neurons 2
-        self.nh3 = numHidden3     #Number of Hidden layer Neurons 3
+        self.nh = HL #np array holding number of neurons per hidden layer
         self.no = numOutput     #Number of Output Neuroms
 
         self.iNodes = np.zeros(shape=[self.ni],dtype=np.float32)   #input Neurons does not process.
-        self.h1Nodes = np.zeros(shape=[self.nh1],dtype=np.float32)   #Hidden Neurons 1
-        self.h2Nodes = np.zeros(shape=[self.nh2],dtype=np.float32)   #Hidden Neurons 2 
-        self.h3Nodes = np.zeros(shape=[self.nh3],dtype=np.float32)   #Hidden Neurons 3
+        np
+        self.hNodes = [] #create list of array of the size of each respective hidden layer, access by hNodes[layer][neuron] 
+        for i in range(len(HL)):
+            self.hNodes.append(np.zeros(shape = [HL[i]],dtype = np.float32))
         self.oNodes = np.zeros(shape=[self.no],dtype=np.float32)   #Output Neurons
 
-        self.ihWeights = np.zeros(shape=[self.ni,self.nh1],dtype=np.float32)     #Hidden layer Weight Matrix W1
-        self.hh1Weights = np.zeros(shape=[self.nh1,self.nh2],dtype=np.float32)     #Hidden layer Weight Matrix W2
-        self.hh2Weights = np.zeros(shape=[self.nh2,self.nh3],dtype=np.float32)     #Hidden layer Weight Matrix W3
-        self.hoWeights = np.zeros(shape=[self.nh3,self.no],dtype=np.float32)     #Output Layer Weight Matrix W4
+        self.ihWeights = np.zeros(shape=[self.ni,self.nh[0]],dtype=np.float32)     #Hidden layer Weight Matrix W1
+        self.hWeights = [] #list of weight matrices between hidden layers
+        if len(HL) == 1: #assume that there is at least 1 hidden layer
+            self.hWeights.append(np.zeros(shape=[self.nh[0],self.no],dtype=np.float32))
+        else:       
+            for i in range(len(HL)-1):
+                self.hWeights.append(np.zeros(shape=[self.nh[i],self.nh[i+1]],dtype=np.float32)) 
+        self.hoWeights = np.zeros(shape=[self.nh[len(self.nh)-1],self.no],dtype=np.float32) 
+      
 
-        print("hh1: ", self.hh1Weights) 
-
-        self.h1Biases = np.zeros(shape=[self.nh1],dtype=np.float32)           #Bias Weights of Hidden Layer 1
-        self.h2Biases = np.zeros(shape=[self.nh2],dtype=np.float32)           #Bias Weights of Hidden Layer 2
-        self.h3Biases = np.zeros(shape=[self.nh3],dtype=np.float32)           #Bias Weights of Hidden Layer 3
+        self.hBiases = []
+        for i in range(len(HL)):
+            self.hBiases.append(np.zeros(shape = [HL[i]],dtype = np.float32))
         self.oBiases = np.zeros(shape=[self.no],dtype=np.float32)           #Bias Weights of Output Layer
 
         self.rnd = random.Random(seed)      #Execute Mulitple Instances
@@ -58,9 +86,14 @@ class NeuralNetwork:
 
     #A Static Method to compute the total number of weights in the network
     @staticmethod
-    def ComputeNumberOfWeights(numInputs,numHidden1,numHidden2,numHidden3,numOutput):
-        wc = ((numInputs*numHidden1)+ (numHidden1*numHidden2) + (numHidden2*numHidden3) + (numHidden3*numOutput)
-              + numHidden1 + numHidden2 + numHidden3 + numOutput)
+    def ComputeNumberOfWeights(numInputs,HL,numOutput):
+        sumHL = 0
+        for i in range(len(HL)-1):
+            prod = HL[i]*HL[i+1]
+            sumHL += prod
+
+        wc = int(((numInputs*HL[0])+ sumHL + (HL[-1]*numOutput)
+              + sum(HL) + numOutput))
         return wc
 
     #A Static Method to compute the activation output of a neuron
@@ -75,168 +108,137 @@ class NeuralNetwork:
         idx = 0
         #Set the hidden layer weights
         for i in range(self.ni): #outer loop = # of nuerons in input layer 
-            for j in range(self.nh1): #inner loop = # of nuerons in hidden layer 
+            for j in range(self.nh[0]): #inner loop = # of nuerons in hidden layer 
                 self.ihWeights[i,j] = w[idx]
                 idx += 1
 
         #Set the hidden 1 bias weights
-        for j in range(self.nh1):
-            self.h1Biases[j] = w[idx]
+        for j in range(self.nh[0]):
+            self.hBiases[0][j] = w[idx]  # bias vector 1 
             idx += 1
 
-        #set the hidden layer 2 weights
-        for i in range(self.nh1):
-            for j in range(self.nh2):
-                self.hh1Weights[i,j] = w[idx]
+        for i in range(len(self.nh)-1):
+            for j in range(self.nh[i]):
+                for k in range(self.nh[i+1]):
+                    self.hWeights[i][j,k] = w[idx]
+                    idx += 1
+        print(self.hWeights)
+        print("hBiases: ", self.hBiases)
+        for i in range(1,len(self.nh)):
+            for j in range(self.nh[i]):
+                self.hBiases[i][j] = w[idx] #bias vectors 2 and 3
                 idx += 1
-
-        #Set the H2 bias weights
-        for j in range(self.nh2):
-            self.h2Biases[j] = w[idx]
-            idx += 1
-
-        #set the Hidden layer 3 weights
-        for i in range(self.nh2):
-            for j in range(self.nh3):
-                self.hh2Weights[i,j] = w[idx]
-                idx += 1
-
-        #Set the H3 bias weights
-        for j in range(self.nh3):
-            self.h3Biases[j] = w[idx]
-            idx += 1
-
+        print("hBiases: ",self.hBiases)
+        input("wait")
         #set the ouptout layer weights
-        for i in range(self.nh3):
+        for i in range(self.nh[-1]):
             for j in range(self.no):
                 self.hoWeights[i,j] = w[idx]
                 idx += 1
 
         #Set the output bias weights
         for j in range(self.no):
-            self.oBiases[j] = w[idx]
+            self.oBiases[j] = w[idx] #output bias vector
             idx += 1
 
     #Function to get the weights of different layers
     def GetWeights(self):
-        NumberOfWeights = self.ComputeNumberOfWeights(self.ni,self.nh1,self.nh2,self.nh3,self.no)
+        NumberOfWeights = self.ComputeNumberOfWeights(self.ni,self.nh,self.no)
         result = np.zeros(shape=[NumberOfWeights],dtype = np.float32)
         idx = 0
 
-        #Get weights for W1
-
-        for i in range(self.ni):
-            for j in range(self.nh1):
+                #Set the hidden layer weights
+        for i in range(self.ni): #outer loop = # of nuerons in input layer 
+            for j in range(self.nh[0]): #inner loop = # of nuerons in hidden layer 
                 result[idx] = self.ihWeights[i,j]
                 idx += 1
-        
-        for j in range(self.nh1):
-            result[idx] = self.h1Biases[j]
+
+        #Set the hidden 1 bias weights
+        for j in range(self.nh[0]):
+            result[idx] = self.hBiases[0][j]# bias vector 1 
             idx += 1
 
-        #Get weights for W2
-
-        for i in range(self.nh1):
-            for j in range(self.nh2):
-                result[idx] = self.hh1Weights[i,j]
+        for i in range(len(self.nh)-1):
+            for j in range(self.nh[i]):
+                for k in range(self.nh[i+1]):
+                    result[idx] = self.hWeights[i][j,k]
+                    idx += 1
+        print(self.hWeights)
+        print("hBiases: ", self.hBiases)
+        for i in range(1,len(self.nh)):
+            for j in range(self.nh[i]):
+                result[idx] = self.hBiases[i][j]  #bias vectors 2 and 3
                 idx += 1
-
-        for j in range(self.nh2):
-            result[idx] = self.h2Biases[j]
-            idx += 1
-
-        #Get weights for W3
-
-        for i in range(self.nh2):
-            for j in range(self.nh3):
-                result[idx] = self.hh2Weights[i,j]
-                idx += 1
-
-        for j in range(self.nh2):
-            result[idx] = self.h3Biases[j]
-            idx += 1
-
-        #Get weights for W4
-
-        for i in range(self.nh3):
+        print("hBiases: ",self.hBiases)
+        input("wait")
+        #set the ouptout layer weights
+        for i in range(self.nh[-1]):
             for j in range(self.no):
-                result[idx] = self.hoWeights[i,j]
+                result[idx] = self.hoWeights[i,j] 
                 idx += 1
 
+        #Set the output bias weights
         for j in range(self.no):
-            result[idx] = self.oBiases[j]
+            result[idx] = self.oBiases[j] #output bias vector
             idx += 1
 
         return result
 
     #A Method to intitialize the weights of the network.
     def InitializeWeights(self):
-        NumberOfWeights = self.ComputeNumberOfWeights(self.ni,self.nh1,self.nh2,self.nh3,self.no)#total number of weights in entire network
+        NumberOfWeights = self.ComputeNumberOfWeights(self.ni,self.nh,self.no)#total number of weights in entire network
         weights = np.zeros(shape=[NumberOfWeights],dtype=np.float32)
         range_min = -0.1
         range_max = 0.1
         for i in range(len(weights)): #one way of setting random values
             weights[i] = (range_max - range_min)*self.rnd.random() + range_min
         
+            print("num weights: ",NumberOfWeights)
         self.SetWeights(weights) #creates huge vector of weights with length ni*nh*no
 
     #A Method to perform forward pass
     def PerformForwardPass(self,xValues):
-        h1Sums = np.zeros(shape=[self.nh1],dtype=np.float32)# a vector of local induced values (I1) 
-        h2Sums = np.zeros(shape=[self.nh2],dtype=np.float32)
-        h3Sums = np.zeros(shape=[self.nh3],dtype=np.float32)
+        hSums = []
+        for i in range(len(self.nh)):
+            hSums.append(np.zeros(shape=[self.nh[i]],dtype=np.float32))
         oSums = np.zeros(shape=[self.no],dtype=np.float32)# I2 
 
         #present the single input pattern to the network
         for i in range(self.ni):
             self.iNodes[i] = xValues[i]#iNodes: input neurons 
         #compute W1*X (not including bias here) --> gives you I1 
-        for j in range(self.nh1):
+        for j in range(self.nh[0]):
             for i in range(self.ni):
-                h1Sums[j] += self.iNodes[i]*self.ihWeights[i,j]#matrix vector multiplication 
+                hSums[0][j] += self.iNodes[i]*self.ihWeights[i,j]#matrix vector multiplication 
         #Hidden Layer local induced field, now include the biases to get true I1
-        for j in range(self.nh1):
-            h1Sums[j] += self.h1Biases[j]
+        for j in range(self.nh[0]):
+            hSums[0][j] += self.hBiases[0][j]
         #compute output of the hidden layer --> gives y1
-        for j in range(self.nh1):
-            self.h1Nodes[j] = self.ActivationOutput(h1Sums[j])
-
+        for j in range(self.nh[0]):
+            self.hNodes[0][j] = self.ActivationOutput(hSums[0][j])
+        input("made it here")
         #---------------Second Layer--------------------#
-            
-        #compute W2*Y1
-        for k in range(self.nh2):
-            for j in range(self.nh1):
-                h2Sums[k] += self.h1Nodes[j]*self.hh1Weights[j,k]
         
-        #Output Layer local induced field, now include the biases to get true I2
-        for j in range(self.nh2):
-            h2Sums[j] += self.h2Biases[j]
-
-        #compute output of the output layer --> gives y2
-        for j in range(self.nh2):
-            self.h2Nodes[j] = self.ActivationOutput(h2Sums[j])
-
-        #---------------Third Layer--------------------#
-
-        #compute W3*Y2
-        for k in range(self.nh3):
-            for j in range(self.nh2):
-                h3Sums[k] += self.h2Nodes[j]*self.hh2Weights[j,k]
+        for i in range(len(self.nh)-1):  
+            #compute W2*Y1
+            for k in range(self.nh[i+1]):
+                for j in range(self.nh[i]):
+                    hSums[i+1][k] += self.hNodes[i][j]*self.hWeights[i][j,k]
         
-        #Output Layer local induced field, now include the biases to get true I2
-        for j in range(self.nh3):
-            h3Sums[j] += self.h3Biases[j]
+            #Output Layer local induced field, now include the biases to get true I2
+            for j in range(self.nh[i+1]):
+                hSums[i+1][j] += self.hBiases[i+1][j]
 
-        #compute output of the output layer --> gives y2
-        for j in range(self.nh3):
-            self.h3Nodes[j] = self.ActivationOutput(h3Sums[j])
+            #compute output of the output layer --> gives y2
+            for j in range(self.nh[i+1]):
+                self.hNodes[i+1][j] = self.ActivationOutput(hSums[i+1][j])
 
         #---------------Output Layer--------------------#
 
         #compute W2*Y1
         for k in range(self.no):
-            for j in range(self.nh3):
-                oSums[k] += self.h3Nodes[j]*self.hoWeights[j,k]
+            for j in range(self.nh[-1]):
+                oSums[k] += self.hNodes[-1][j]*self.hoWeights[j,k]
         
         #Output Layer local induced field, now include the biases to get true I2
         for j in range(self.no):
@@ -254,27 +256,26 @@ class NeuralNetwork:
 
         #component style,  compute gradient of each weight
 
-        hoGrads = np.zeros(shape=[self.nh3,self.no],dtype=np.float32)#5x3 i this case (delC/delw1i)
+        hoGrads = np.zeros(shape=[self.nh[-1],self.no],dtype=np.float32)#5x3 i this case (delC/delw1i)
         obGrads = np.zeros(shape=[self.no],dtype=np.float32)#bias gradients
 
-        h2h3Grads = np.zeros(shape=[self.nh2,self.nh3],dtype=np.float32)#gradients in to hidden layer
-        h3bGrads = np.zeros(shape=[self.nh3],dtype=np.float32)#biases for neurons in hidden layer
+        hGrads = []
+        hbGrads = []
 
-        h1h2Grads = np.zeros(shape=[self.nh1,self.nh2],dtype=np.float32)#gradients in to hidden layer
-        h2bGrads = np.zeros(shape=[self.nh2],dtype=np.float32)#biases for neurons in hidden layer
+        for i in range(len(self.nh)-1):
+            hGrads.append(np.zeros(shape=[self.nh[i],self.nh[i+1]],dtype=np.float32))
+            hbGrads.append(np.zeros(shape=[self.nh[i+1]],dtype=np.float32))
 
-        ihGrads = np.zeros(shape=[self.ni,self.nh1],dtype=np.float32)#gradients in to hidden layer
-        h1bGrads = np.zeros(shape=[self.nh1],dtype=np.float32)#biases for neurons in hidden layer
+        ihGrads = np.zeros(shape=[self.ni,self.nh[0]],dtype=np.float32)#gradients in to hidden layer
+        h1bGrads = np.zeros(shape=[self.nh[0]],dtype=np.float32)#biases for neurons in hidden layer
 
         #output signals; gradients w/o associated input terms (y-d)*deriv of activation 
         oSignals = np.zeros(shape=[self.no],dtype=np.float32)
 
         #hidden signals 
-        h1Signals = np.zeros(shape=[self.nh1],dtype=np.float32)
-        #hidden signals 
-        h2Signals = np.zeros(shape=[self.nh2],dtype=np.float32)
-        #hidden signals 
-        h3Signals = np.zeros(shape=[self.nh3],dtype=np.float32)
+        hSignals = []
+        for i in range(len(self.nh)):
+            hSignals.append(np.zeros(shape=[self.nh[i]],dtype=np.float32))
 
         x_values = np.zeros(shape=[self.ni],dtype=np.float32)   #A Single input pattern, row vector of 4
         d_values = np.zeros(shape=[self.no],dtype = np.float32) #The desired output, row vector of 3 
@@ -295,6 +296,8 @@ class NeuralNetwork:
                     d_values[j] = TrainData[idx,self.ni+j]
 
                 a_values = self.PerformForwardPass(x_values)
+
+                print(a_values)
                 
 
                 #implement back propagation
@@ -307,27 +310,28 @@ class NeuralNetwork:
                     oSignals[k] = O_derv*(self.oNodes[k]-d_values[k])#calculates the gradient (y-d)*derv of activation 
 
                 #compute the hidden to output weight gradients using output local gradient and output of hidden units
-                for j in range(self.nh3):
+                for j in range(self.nh[-1]):
                     for k in range(self.no):
-                        hoGrads[j,k] = oSignals[k]*self.h3Nodes[j] #(y-d)*derv*Y1
+                        hoGrads[j,k] = oSignals[k]*self.hNodes[-1][j] #(y-d)*derv*Y1
 
                 #compute the output node bias gradients
                 for k in range(self.no):
                     obGrads[k] = oSignals[k] #bias contains 1 so just set equal to output signals
 
+                
                 #------------HL3 --> HL2 --------------------#
-
+                """ COMPLETE BACK PROP AND WEIGHT UPDATES TODAY!!! """
                 #compute the local gradient of the hidden layer
-                for j in range(self.nh3):
+                for j in range(self.nh[-1]):
                     sum = 0.0
                     for k in range(self.no):
                         sum += oSignals[k]*self.hoWeights[j,k] 
-                    h3_derv = (1.0 - self.h3Nodes[j])*self.h3Nodes[j]#derivatives of hidden nodes
-                    h3Signals[j] = sum*h3_derv #contains W2^T*delta2
+                    h_derv = (1.0 - self.h3Nodes[j])*self.hNodes[-1][j]#derivatives of hidden nodes
+                    hSignals[-1][j] = sum*h_derv #contains W2^T*delta2
 
                 #hidden weight gradients using hidden local gradient and input to the network
-                for j in range(self.nh2):
-                    for k in range(self.nh3):
+                for j in range(self.nh[-2]):
+                    for k in range(self.nh[-1]):
                         h2h3Grads[j,k] = h3Signals[k]*self.h2Nodes[j] # does schurs product and gives delta1
 
                 #hidden node bias gradients
@@ -356,7 +360,7 @@ class NeuralNetwork:
                 #------------HL1 --> IL --------------------#
 
                 #compute the local gradient of the hidden layer
-                for j in range(self.nh1):
+                for j in range(self.nh[0]):
                     sum = 0.0
                     for k in range(self.nh2):
                         sum += h2Signals[k]*self.hh1Weights[j,k] 
@@ -484,6 +488,9 @@ class NeuralNetwork:
         return Y,numErrors
 
 if __name__ == '__main__':
+
+    HL = InputNetworkParameters()
+
     print("\nLoading training data ")
     trainDataFile = "TrainData.txt"
     trainDataMatrix = loadFile(trainDataFile)
@@ -493,18 +500,16 @@ if __name__ == '__main__':
         print(trainDataMatrix[i])
 
     InputCount = 4      #Number of Inputs
-    HiddenCount1 = 5     #Number of neurons in the hidden layer
-    HiddenCount2 = 6     #Number of neurons in the hidden layer
-    HiddenCount3 = 5     #Number of neurons in the hidden layer
     OutputCount = 3     #Number of Neurons in the output layer
 
-    nn = NeuralNetwork(InputCount,HiddenCount1,HiddenCount2,HiddenCount3,OutputCount,seed = 3)
-    #print("Hidden Layer Weights\n",nn.ihWeights)
-    #print("Hidden Layer Bias Weights\n",nn.hBiases)
-    #print("Output Layer Weights\n",nn.hoWeights)
-    #print("Output Layer Bias Weights\n",nn.oBiases)
+    nn = NeuralNetwork(InputCount,HL,OutputCount,seed = 3)
+    print("W1\n",nn.ihWeights)
+    print("Hidden: \n",nn.hWeights)
+    print("Hidden Layer Bias Weights\n",nn.hBiases)
+    print("Output Layer Weights\n",nn.hoWeights)
+    print("Output Layer Bias Weights\n",nn.oBiases)
 
-    MaxEpochs = 500
+    MaxEpochs = 300
     learnRate = 0.5
     print("Starting Training")
     nn.trainNN(trainDataMatrix,MaxEpochs,learnRate)

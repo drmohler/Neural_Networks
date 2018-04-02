@@ -341,7 +341,7 @@ class NeuralNetwork:
 
 if __name__=="__main__":
 
-    learnRate = 0.75
+    learnRate = 0.8
     maxEpochs = 7
 
     TrainX,TrainY,TestX,TestY = readMNIST()
@@ -358,7 +358,7 @@ if __name__=="__main__":
 
     #    else:
     #        break
-    NumHidden = 5
+    NumHidden = 10
     NumOutputs = np.max(TestY)+1 #Should always be 10 to represent digits 0-9
      
     print("number of classes: ",NumOutputs)
