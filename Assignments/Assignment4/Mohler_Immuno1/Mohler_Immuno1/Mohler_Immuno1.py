@@ -31,10 +31,11 @@ def ReadFileData(filename,featureLabels,bias):
                 featureLabels.append(row[3])    #Third  Feature name
                 featureLabels.append(row[4])    #fourth Feature name
                 featureLabels.append(row[5])    #fifth  Feature name
+                featureLabels.append(row[6])    #fifth  Feature name
             else:
-                arrx.append([float(row[1]),float(row[2]),float(row[3]),float(row[4]),float(row[5]),bias]) #Read the actual data of the input features
+                arrx.append([float(row[1]),float(row[2]),float(row[3]),float(row[4]),float(row[5]),float(row[6]),bias]) #Read the actual data of the input features
                 #if(type == "training"): #Read the desired output if the data is training data. (checks for string equality from params)
-                arry.append(float(row[6]))
+                arry.append(float(row[7]))
             i = i + 1
         xInput = np.array(arrx) #Create an np.array object of the input features
         yInput = np.array(arry) #Create an np.array object of the desired output features. This will be empty for test patterns.
@@ -42,17 +43,25 @@ def ReadFileData(filename,featureLabels,bias):
     return xInput,yInput
    
 
-def SplitData(data):
-    x_values = np.zeros(shape = [len(data),4],dtype = np.float32)
-    d_values = np.zeros(shape = [len(data),3],dtype = np.float32)
+#A function used to split the given data in to training and test patterns
+def SplitData(data,labels,NumTrain):
+    TrainX = np.zeros(shape=[int(NumTrain),data.shape[1]],dtype=np.float32)
+    TrainY = np.zeros(shape=[int(NumTrain)],dtype=np.float32)
+    TestX = np.zeros(shape=[int(data.shape[0]-NumTrain),data.shape[1]],dtype=np.float32)
+    TestY = np.zeros(shape=[int(data.shape[0]-NumTrain)],dtype=np.float32)
+    for i in range(NumTrain):
+        TrainX[i] = data[i]
+        TrainY[i] = labels[i]
+        
+    for i in range(int(data.shape[0]-NumTrain)):
+            TestX[i] = data[i+NumTrain]
+            TestY[i] = labels[i+NumTrain]
+    
+    return TrainX, TrainY, TestX, TestY
 
-    for i in range(len(data)):
-        for j in range(7): #four inputs and 3 outputs
-            x_values[i,j] = data[i,j]
-        for j in range(3):
-            d_values[i,j] = data[i,4+j]
-
-    return x_values,d_values
+"""WRITE FUNCTION TO NORMALIZE THE COLUMNS USING Z SCALING (DATA-MEAN)/STDDEV""" 
+def NormalizeData(data):
+    ...
 
 def sigmoid(v):
     return tf.div(tf.constant(1.0),tf.add(tf.constant(1.0),tf.exp(tf.negative(v))))
@@ -66,24 +75,30 @@ if __name__ == '__main__':
     print("\nLoading training data ")
 
     current_dir = os.path.dirname(os.path.realpath(__file__))
-    #print("Path: ", p)
-    file = os.path.sep.join(current_dir.split(os.path.sep)[:-2])
-    file = os.path.join(file,'\Immunotherapy.csv')
-    print("file: ",file)
-
-    trainDataFile = "Immunotherapy.csv"
+    tempfile = os.path.sep.join(current_dir.split(os.path.sep)[:-2])
+    trainDataFile = os.path.join(tempfile,'Immunotherapy.csv')
     labels = []
     bias = -1
-    trainDataMatrix = ReadFileData(trainDataFile,labels,bias)
-    print("Training Data")
+    trainDataMatrix,trainLabels = ReadFileData(trainDataFile,labels,bias)
+    print("Data")
+    labels.append('Bias')
+    #print(labels)
+    #for i,x in enumerate(trainDataMatrix):
+    #    print(trainDataMatrix[i])
+
+    print("Total number of patterns: ", trainDataMatrix.shape[0])
+
+    numTrain = int(trainDataMatrix.shape[0]*0.8)
+    print("Number of patterns used for training: ", numTrain)
+
+    TrainX,TrainY,TestX,TestY = SplitData(trainDataMatrix,trainLabels,numTrain)
     
-    for i,x in enumerate(trainDataMatrix):
-        print(trainDataMatrix[i])
+    print("Training Patterns: ")
+    print("Labels:\n",labels)
+    print("TrainX:\n",TrainX)
+    print("TrainY:\n",TrainY) 
 
-    X,d = SplitData(trainDataMatrix)
-    print(X)
-    print(d)
-
+    input("Wait Here")
     #number of neurons in each layer
     input = 4
     hidden = 5
