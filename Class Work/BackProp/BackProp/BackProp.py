@@ -188,7 +188,7 @@ class NeuralNetwork:
                 #compute the local gradient of the output layer
                 for k in range(self.no):
                     O_derv = (1.0 - self.oNodes[k])*self.oNodes[k] #oNodes currently contains the output Y2
-                    oSignals[k] = O_derv*(self.oNodes[k]-d_values[k])#calculates the gradient (y-d)*derv of activation
+                    oSignals[k] = O_derv*(self.oNodes[k]-d_values[k])#calculates the gradient (y-d)*derv of activation 
 
                 #compute the hidden to output weight gradients using output local gradient and output of hidden units
                 for j in range(self.nh):
@@ -206,6 +206,7 @@ class NeuralNetwork:
                         sum += oSignals[k]*self.hoWeights[j,k] 
                     h_derv = (1.0 - self.hNodes[j])*self.hNodes[j]#derivatives of hidden nodes
                     hSignals[j] = sum*h_derv #contains W2^T*delta2
+
                 #hidden weight gradients using hidden local gradient and input to the network
                 for j in range(self.ni):
                     for k in range(self.nh):
@@ -236,7 +237,12 @@ class NeuralNetwork:
             epoch += 1
             if epoch % 10 == 0:
                 mse = self.ComputeMeanSquaredError(TrainData)
-                print("Epcoh = ",epoch, "MSE = ",mse)
+                print("Epoch = ",epoch, "MSE = ",mse)
+                print("Hidden Layer 1 Weights\n",self.ihWeights)
+                print("Hidden Layer 1 Bias Weights\n",self.hBiases)
+                print("Output Layer Weights\n",self.hoWeights)
+                print("Output Layer Bias Weights\n",self.oBiases)
+                input("observe")
 
         weights = self.GetWeights()
         return weights
@@ -259,7 +265,7 @@ class NeuralNetwork:
 
             for j in range(self.no):
                 err = d_values[j] - y_values[j]
-                sumSquaredError = err*err   #(d-y)^2
+                sumSquaredError += err*err   #(d-y)^2
 
         return sumSquaredError/len(data)
     
@@ -286,6 +292,9 @@ class NeuralNetwork:
                 if(abs(Y[i,j] - d_values[j]) == 1):
                     numErrors += 1
                     break
+            print("y_values: ",y_values)
+            print("d_values: ",d_values)
+
         return Y,numErrors
 
 if __name__ == '__main__':
