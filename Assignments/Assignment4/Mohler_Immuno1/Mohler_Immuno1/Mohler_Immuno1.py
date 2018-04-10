@@ -10,12 +10,14 @@ import tensorflow
 import tensorflow as tf
 import numpy as np
 import csv
+from pathlib import Path
+import os
 
 """MODIFY THIS TO READ THE IMMUNOTHERAPY DATA"""
 # will need modifications that handle the data being split (arry)
 
 #A Function to read data from csv files and create augemented patterns
-"""
+
 def ReadFileData(filename,featureLabels,bias):
     with open(filename,'rt') as f:  #Opening a file to read a text file
         reader = csv.reader(f)      #reader is a iteration object and each iteration returns a line in the file
@@ -30,15 +32,15 @@ def ReadFileData(filename,featureLabels,bias):
                 featureLabels.append(row[4])    #fourth Feature name
                 featureLabels.append(row[5])    #fifth  Feature name
             else:
-                arrx.append([float(row[1]),float(row[2]),float(row[3]),bias]) #Read the actual data of the input features
-                if(type == "training"): #Read the desired output if the data is training data. (checks for string equality from params)
-                    arry.append(float(row[6]))
+                arrx.append([float(row[1]),float(row[2]),float(row[3]),float(row[4]),float(row[5]),bias]) #Read the actual data of the input features
+                #if(type == "training"): #Read the desired output if the data is training data. (checks for string equality from params)
+                arry.append(float(row[6]))
             i = i + 1
         xInput = np.array(arrx) #Create an np.array object of the input features
         yInput = np.array(arry) #Create an np.array object of the desired output features. This will be empty for test patterns.
 
     return xInput,yInput
-    """
+   
 
 def SplitData(data):
     x_values = np.zeros(shape = [len(data),4],dtype = np.float32)
@@ -62,8 +64,17 @@ def sigmoid_prime(v):
 
 if __name__ == '__main__':
     print("\nLoading training data ")
+
+    current_dir = os.path.dirname(os.path.realpath(__file__))
+    #print("Path: ", p)
+    file = os.path.sep.join(current_dir.split(os.path.sep)[:-2])
+    file = os.path.join(file,'\Immunotherapy.csv')
+    print("file: ",file)
+
     trainDataFile = "Immunotherapy.csv"
-    trainDataMatrix = ReadFileData(trainDataFile)
+    labels = []
+    bias = -1
+    trainDataMatrix = ReadFileData(trainDataFile,labels,bias)
     print("Training Data")
     
     for i,x in enumerate(trainDataMatrix):
