@@ -117,7 +117,12 @@ if __name__ == '__main__':
     cost = tf.reduce_mean(tf.square(error)) #squared error cost function (no 1/2) 
     
     #need 50000 epochs for equal performance to the 5000 by manual 
-    step = tf.train.GradientDescentOptimizer(learningRate).minimize(cost) #replaces the entire comment block ... gave wayyyy worse error 
+    #step = tf.train.GradientDescentOptimizer(learningRate).minimize(cost) #replaces the entire comment block ... gave wayyyy worse error 
+    #step = tf.train.AdagradOptimizer(0.1,0.1).minimize(cost)
+    #step = tf.train.RMSPropOptimizer(0.1,0.9).minimize(cost)
+    #step = tf.train.AdadeltaOptimizer(0.1).minimize(cost)
+    #step = tf.train.AdamOptimizer(0.1).minimize(cost)
+    step = tf.train.MomentumOptimizer(0.1,0.2,False,'Momentum',True).minimize(cost)
 
     init = tf.global_variables_initializer()
     #fills all tf.variables, remember constants and variables are DIFFERENT

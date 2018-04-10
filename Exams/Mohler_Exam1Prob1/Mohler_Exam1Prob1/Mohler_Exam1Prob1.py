@@ -333,7 +333,7 @@ class NeuralNetwork:
 
 if __name__=="__main__":
 
-    learnRate = 0.05
+    learnRate = 0.25
     maxEpochs = 10
 
     TrainX,TrainY,TestX,TestY = readMNIST()
@@ -374,7 +374,7 @@ if __name__=="__main__":
     nn = NeuralNetwork(NumInputs,NumHidden,NumOutputs,seed = np.random.randint(0,10))  
 
     print("Beginning Network Training")
-    nn.trainNN(TrainX[0:100],TrainY,maxEpochs,learnRate)
+    nn.trainNN(TrainX,TrainY,maxEpochs,learnRate)
     print("Network Training Complete\n") 
     print("Validating Results...\n")
 
