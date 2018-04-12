@@ -4,8 +4,10 @@ from tensorflow.examples.tutorials.mnist import input_data
 import matplotlib.pyplot as plt
 import time
 
-"""CNN accepts images of height 28, width 8, and depth 1 corresponding to gray scale.
+"""CNN accepts images of height 28, width 28, and depth 1 corresponding to gray scale.
 The images are applied to the first convolution layer and produces 64 feature maps.
+(64 kernels for the first layer) 
+
 The second convolution layer provides 128 feature maps.
 The feature maps are 2D.
 The fully connected layers has 1024 units.
@@ -29,11 +31,13 @@ def conv2d(X,W,b,strides=1):
     """
     """
     If the padding = 'SAME', the input and output images are of the same size by implementing
-    zero padding on the input.
+    zero padding on the input. (TF will compute using the padding equation from notes 4-12-2018) 
     If the padding = 'VALID', the input is not padded and the output image size will be less 
     than the input image.
     """
-    ...
+    net = tf.nn.conv2d(X,W,strides=[1,strides,strides,1],padding='SAME')
+    net = tf.nn.bias_add(net,b) #add bias to each convolved value, but all get the same bias value
+    return tf.nn.relu(net) #return the output of the detection layer
 
 #Function to create Pooling
 def maxPool2d(X,stride=2):
@@ -41,17 +45,29 @@ def maxPool2d(X,stride=2):
     The maximum pooling is performed on the locality of 2x2 which is described by the ksize.
     The pooling is performed by moving two pixels both in height and width dimensions.
     """
-    ...
+    #compresses data size by a factor of 4
+    #k size --> input to max pooling 
+    return tf.nn.max_pool(X,ksize = [1,stride,stride,1],strides=[1,stride,stride,1],padding='SAME')
 
 #Function to Create the Feed Forward Network
 def conv_net(X,weights,biases,dropout):
+
+
     #Reshape the input 1D image into 4 dimensional tensor
-
+    X = tf.reshape(X,shape=[1,28,28,1]) #X is whole batch, reshapes each of them
     #Convolution Layer 1
-
+    conv1 = conv2d(X,weights['wc1'],biases['bc1'])#wc1 --> weights to conv layer 1
+    conv1 = maxPool2d(conv1,2)
     #Convolution Layer 2
+    
+    conv2 = conv2d(conv1,weights['wc2'],biases['bc2'])#wc1 --> weights to conv layer 1
+    conv2 = maxPool2d(conv2,2)
 
     #Fully Connected Layer Operation
+    fc1 = tf.reshape(conv2,[-1,weights['wd1'].getshape().as_list()[0]]) #wd --> dense layer 
+    fc1 = tf.add(tf.matmul(fc1,weights['wd1']),biases['bd1'])
+    fc1 = tf.nn.relu(fc1)
+    
 
     #Apply Dropout
 

@@ -242,7 +242,7 @@ if __name__ == '__main__':
     
     #select the optimizer for the network 
     #step = tf.train.GradientDescentOptimizer(learningRate).minimize(cost)
-    step = tf.train.AdagradOptimizer(0.1,0.1).minimize(cost)
+    step = tf.train.AdagradOptimizer(learningRate,0.1).minimize(cost)
     #step = tf.train.RMSPropOptimizer(0.1,0.9).minimize(cost)
     #step = tf.train.AdadeltaOptimizer(0.1).minimize(cost)
     #step = tf.train.MomentumOptimizer(0.1,0.2,False,'Momentum',True).minimize(cost)
