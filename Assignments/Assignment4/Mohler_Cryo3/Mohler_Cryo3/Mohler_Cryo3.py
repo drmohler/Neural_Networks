@@ -285,7 +285,9 @@ if __name__ == '__main__':
         testSet = normTestX_C #test with cryo data
         testLabels = TestY_C
 
-    with tf.Session() as sess:
+    config = tf.ConfigProto(device_count = {'GPU': 0})
+
+    with tf.Session(config=config) as sess:
         sess.run(init)
         print("\n\nTraining...")
         for i in range(num_epochs): 
@@ -341,10 +343,10 @@ if __name__ == '__main__':
     print("Network Accuracy: %", ((testSet.shape[0]-numMisClassTest)*100)/testSet.shape[0])
 
     #Cost vs Epoch Plot
-    fig = plt.figure("Cost Vs Epoch for Cryo Network #2")
+    fig = plt.figure("Cost Vs Epoch for Cryo Network #3")
     plt.plot(cost_value)
     plt.xlabel('Epoch')
     plt.ylabel('Cost')
-    plt.title("Cost Vs Epoch for Cryo Network #2")
+    plt.title("Cost Vs Epoch for Cryo Network #3")
     plt.grid()
-    #plt.show()
+    plt.show()

@@ -4,7 +4,7 @@ David R Mohler
 EE5410: Neural Networks
 Assignment 4
 
-Immunotherapy Network: 3
+Immunotherapy Network: 2
 """
 
 import tensorflow
@@ -81,7 +81,7 @@ def SplitData(data,labels,NumTrain):
     return TrainX, TrainY, TestX, TestY
 
 def NormalizeData(data):
-    mean = np.mean(data,axis=0) #calculate the mean of the data down the columns (array 
+    mean = np.mean(data,axis=0) #calculate the mean of the data down the columns 
     std = np.std(data,axis=0)   #calculate the std dev of the data down the cols
     norm = np.zeros(shape=[data.shape[0],data.shape[1]],dtype=np.float32)
     for j in range(data.shape[1]): #j should iterate through the input columns 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     #boolean flags to choose data sets for training and testing
     ImmunoTrain = False
-    ImmunoTest = True
+    ImmunoTest = False
     
     print("\nLoading training data ")
 
@@ -111,11 +111,6 @@ if __name__ == '__main__':
     trainDataMatrix,trainLabels = ReadImmunoData(trainDataFile,labels) #extract the immuno data
     trainDataCryo , trainLabelsCryo = ReadCryoData(trainDataFileCryo,labelsCryo) #extract cryo data
     
-    #print("Data")
-    
-    #print(labels)
-    #for i,x in enumerate(trainDataMatrix):
-    #    print(trainDataMatrix[i])
 
     print("Total number of patterns: ", trainDataMatrix.shape[0])
 
@@ -133,12 +128,6 @@ if __name__ == '__main__':
     TrainY_C = np.reshape(TrainY_C,(72,1))
     TestY_C  = np.reshape(TestY_C,(18,1))
    
-    
-    #print("Training Patterns: ")
-    #print("Labels:\n",labels)
-    #print("TrainX:\n",TrainX)
-    #print("TrainY:\n",TrainY) 
-
     #normalize training data
     normTrainX = NormalizeData(TrainX)
     normTrainX_C = NormalizeData(TrainX_C)
@@ -148,7 +137,6 @@ if __name__ == '__main__':
     normTestX_C = NormalizeData(TestX_C)
     
     #number of neurons in each layer
-
 
     if ImmunoTrain and ImmunoTest: #using only immuno data
         input = 6
@@ -282,11 +270,7 @@ if __name__ == '__main__':
     for i in range(trainingSet.shape[0]):
         if(y_predTrain[i] != trainingLabels[i]):
             numMisClass += 1
-            
-    compare  = np.concatenate((trainingLabels,y_predTrain),axis=1)
-    #print("Training Results:\n")
-    #print("[True Network]")
-    #print(compare)
+
     print("Total Training Misclassifications: ", numMisClass)
 
     for i in range(testSet.shape[0]):
@@ -313,4 +297,4 @@ if __name__ == '__main__':
     plt.ylabel('Cost')
     plt.title("Cost Vs Epoch for Cryo Network #2")
     plt.grid()
-    #plt.show()
+    plt.show()
