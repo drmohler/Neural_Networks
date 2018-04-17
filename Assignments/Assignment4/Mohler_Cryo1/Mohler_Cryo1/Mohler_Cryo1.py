@@ -96,7 +96,7 @@ def sigmoid(v):
 if __name__ == '__main__':
 
     #boolean flags to choose data sets for training and testing
-    ImmunoTrain = True
+    ImmunoTrain = False  #True: Immuno training, False: Cryo training 
     ImmunoTest = True
     
     print("\nLoading training data ")
@@ -161,7 +161,7 @@ if __name__ == '__main__':
     else:  #use only cryo data 
         input = 5   
     
-    hidden = 36
+    hidden = 25
     output = 1
 
     #Updating the weights, tf so it can be broadcasted
@@ -198,8 +198,12 @@ if __name__ == '__main__':
     cost = tf.reduce_mean(tf.square(error)) #squared error cost function (no 1/2) 
     
     #select the optimizer for the network 
+       #select the optimizer for the network 
     #step = tf.train.GradientDescentOptimizer(learningRate).minimize(cost)
-    step = tf.train.MomentumOptimizer(learningRate,0.2,False,'Momentum',True).minimize(cost)
+    #step = tf.train.AdagradOptimizer(learningRate,0.1).minimize(cost)
+    #step = tf.train.RMSPropOptimizer(learningRate,0.9).minimize(cost)
+    step = tf.train.AdadeltaOptimizer(0.1).minimize(cost)
+    #step = tf.train.MomentumOptimizer(0.1,0.2,False,'Momentum',True).minimize(cost)
 
     init = tf.global_variables_initializer() #fills all tf.variables
 
@@ -272,10 +276,10 @@ if __name__ == '__main__':
     print("Network Accuracy: %", ((testSet.shape[0]-numMisClassTest)*100)/testSet.shape[0])
 
     #Cost vs Epoch Plot
-    fig = plt.figure("Cost Vs Epoch for Immuno Network #1")
+    fig = plt.figure("Cost Vs Epoch for Cryo Network #1")
     plt.plot(cost_value)
     plt.xlabel('Epoch')
     plt.ylabel('Cost')
-    plt.title("Cost Vs Epoch for Immuno Network #1")
+    plt.title("Cost Vs Epoch for Cryo Network #1")
     plt.grid()
-    plt.show()
+    #plt.show()

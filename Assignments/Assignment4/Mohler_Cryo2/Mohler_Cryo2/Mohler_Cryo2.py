@@ -1,9 +1,10 @@
+
 """
 David R Mohler
 EE5410: Neural Networks
 Assignment 4
 
-Immunotherapy Network: 1
+Immunotherapy Network: 2
 """
 
 import tensorflow
@@ -80,7 +81,7 @@ def SplitData(data,labels,NumTrain):
     return TrainX, TrainY, TestX, TestY
 
 def NormalizeData(data):
-    mean = np.mean(data,axis=0) #calculate the mean of the data down the columns (array 
+    mean = np.mean(data,axis=0) #calculate the mean of the data down the columns 
     std = np.std(data,axis=0)   #calculate the std dev of the data down the cols
     norm = np.zeros(shape=[data.shape[0],data.shape[1]],dtype=np.float32)
     for j in range(data.shape[1]): #j should iterate through the input columns 
@@ -96,8 +97,8 @@ def sigmoid(v):
 if __name__ == '__main__':
 
     #boolean flags to choose data sets for training and testing
-    ImmunoTrain = True
-    ImmunoTest = True
+    ImmunoTrain = False
+    ImmunoTest = False
     
     print("\nLoading training data ")
 
@@ -110,11 +111,6 @@ if __name__ == '__main__':
     trainDataMatrix,trainLabels = ReadImmunoData(trainDataFile,labels) #extract the immuno data
     trainDataCryo , trainLabelsCryo = ReadCryoData(trainDataFileCryo,labelsCryo) #extract cryo data
     
-    #print("Data")
-    
-    #print(labels)
-    #for i,x in enumerate(trainDataMatrix):
-    #    print(trainDataMatrix[i])
 
     print("Total number of patterns: ", trainDataMatrix.shape[0])
 
@@ -132,12 +128,6 @@ if __name__ == '__main__':
     TrainY_C = np.reshape(TrainY_C,(72,1))
     TestY_C  = np.reshape(TestY_C,(18,1))
    
-    
-    #print("Training Patterns: ")
-    #print("Labels:\n",labels)
-    #print("TrainX:\n",TrainX)
-    #print("TrainY:\n",TrainY) 
-
     #normalize training data
     normTrainX = NormalizeData(TrainX)
     normTrainX_C = NormalizeData(TrainX_C)
@@ -147,7 +137,6 @@ if __name__ == '__main__':
     normTestX_C = NormalizeData(TestX_C)
     
     #number of neurons in each layer
-
 
     if ImmunoTrain and ImmunoTest: #using only immuno data
         input = 6
@@ -161,13 +150,18 @@ if __name__ == '__main__':
     else:  #use only cryo data 
         input = 5   
     
-    hidden = 36
+    hidden = 10
+    hidden2 = 15
+    hidden3 = 20
+    hidden4 = 15
+    hidden5 = 10
+
     output = 1
 
     #Updating the weights, tf so it can be broadcasted
     #this code does BATCH UPDATE,  known as full batch
     
-    num_epochs = 5000
+    num_epochs = 10000
     cost_value = []
 
     iNodes = tf.placeholder(tf.float32,[None,input])#input nodes, contains entire training data. 
@@ -176,11 +170,24 @@ if __name__ == '__main__':
     d_values = tf.placeholder(tf.float32,shape=(None,1)) #desired values (vector of 0 or 1) 
 
     #setting up variables 
-    w1 = tf.Variable(tf.truncated_normal([input,hidden]))#use truncated normal to initialize weights (input x hidden) 
-                                                         #cant combine bias in tf
+    w1 = tf.Variable(tf.truncated_normal([input,hidden]))#use truncated normal to initialize weights (input x hidden)                                                     
     b1 = tf.Variable(tf.truncated_normal([1,hidden])) #for immunotherapy should be 1x6 array 
-    w2 = tf.Variable(tf.truncated_normal([hidden,output])) #5x1
-    b2 = tf.Variable(tf.truncated_normal([1,output])) #scalar value
+
+    w2 = tf.Variable(tf.truncated_normal([hidden,hidden2])) 
+    b2 = tf.Variable(tf.truncated_normal([1,hidden2])) 
+
+    w3 = tf.Variable(tf.truncated_normal([hidden2,hidden3])) 
+    b3 = tf.Variable(tf.truncated_normal([1,hidden3])) 
+
+    w4 = tf.Variable(tf.truncated_normal([hidden3,hidden4])) 
+    b4 = tf.Variable(tf.truncated_normal([1,hidden4])) 
+
+    w5 = tf.Variable(tf.truncated_normal([hidden4,hidden5])) 
+    b5 = tf.Variable(tf.truncated_normal([1,hidden5])) 
+
+    w6 = tf.Variable(tf.truncated_normal([hidden5,output])) 
+    b6 = tf.Variable(tf.truncated_normal([1,output])) 
+
 
     #the network architecture is created at this point
 
@@ -189,7 +196,20 @@ if __name__ == '__main__':
     y1 = sigmoid(i1) #push through activation function
 
     i2 = tf.add(tf.matmul(y1,w2),b2)
-    y = sigmoid(i2)
+    y2 = sigmoid(i2)
+
+    i3 = tf.add(tf.matmul(y2,w3),b3)
+    y3 = sigmoid(i3)
+
+    i4 = tf.add(tf.matmul(y3,w4),b4)
+    y4 = sigmoid(i4)
+
+    i5 = tf.add(tf.matmul(y4,w5),b5)
+    y5 = sigmoid(i5)
+
+    i6 = tf.add(tf.matmul(y5,w6),b6)
+    y = sigmoid(i6)
+
 
     #Forward Pass Complete, now implement back propagation 
     error = tf.subtract(y,d_values)
@@ -199,7 +219,10 @@ if __name__ == '__main__':
     
     #select the optimizer for the network 
     #step = tf.train.GradientDescentOptimizer(learningRate).minimize(cost)
-    step = tf.train.MomentumOptimizer(learningRate,0.2,False,'Momentum',True).minimize(cost)
+    #step = tf.train.AdagradOptimizer(learningRate,0.1).minimize(cost)
+    #step = tf.train.RMSPropOptimizer(0.1,0.9).minimize(cost)
+    #step = tf.train.AdadeltaOptimizer(0.1).minimize(cost)
+    step = tf.train.MomentumOptimizer(0.1,0.2,False,'Momentum',True).minimize(cost)
 
     init = tf.global_variables_initializer() #fills all tf.variables
 
@@ -247,11 +270,7 @@ if __name__ == '__main__':
     for i in range(trainingSet.shape[0]):
         if(y_predTrain[i] != trainingLabels[i]):
             numMisClass += 1
-            
-    compare  = np.concatenate((trainingLabels,y_predTrain),axis=1)
-    #print("Training Results:\n")
-    #print("[True Network]")
-    #print(compare)
+
     print("Total Training Misclassifications: ", numMisClass)
 
     for i in range(testSet.shape[0]):
@@ -272,10 +291,10 @@ if __name__ == '__main__':
     print("Network Accuracy: %", ((testSet.shape[0]-numMisClassTest)*100)/testSet.shape[0])
 
     #Cost vs Epoch Plot
-    fig = plt.figure("Cost Vs Epoch for Immuno Network #1")
+    fig = plt.figure("Cost Vs Epoch for Cryo Network #2")
     plt.plot(cost_value)
     plt.xlabel('Epoch')
     plt.ylabel('Cost')
-    plt.title("Cost Vs Epoch for Immuno Network #1")
+    plt.title("Cost Vs Epoch for Cryo Network #2")
     plt.grid()
     plt.show()
