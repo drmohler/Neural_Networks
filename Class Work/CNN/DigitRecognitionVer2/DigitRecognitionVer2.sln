@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2036
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "DigitRecognitionVer2", "DigitRecognitionVer2\DigitRecognitionVer2.pyproj", "{0D919CDF-8963-4F78-9499-89FDEB091471}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D919CDF-8963-4F78-9499-89FDEB091471}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D919CDF-8963-4F78-9499-89FDEB091471}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8DCB87AB-EDE2-4875-A50C-03994DD91D04}
+	EndGlobalSection
+EndGlobal
