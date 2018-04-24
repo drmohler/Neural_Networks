@@ -18,7 +18,7 @@ if __name__ == '__main__':
     4.Rescale the pixel values (between 0 and 255) to the [0, 1] interval .
     """
     #Setting up the directory paths
-    BaseDir = 'P:/2018Spring/ClassCodes/CNN/DogsCats/DogsCats' #Change this to match your folders.
+    BaseDir = 'C:/DRM_NeuralNets/Neural_Networks/Class Work/CNN/DogsCats/DogsCats' #Change this to match your folders.
     train_dir = os.path.join(BaseDir,'Train')
     val_dir = os.path.join(BaseDir,'Val')
     test_dir = os.path.join(BaseDir,'Test')
@@ -42,32 +42,70 @@ if __name__ == '__main__':
     print("Total Test Cat Images = ",len(os.listdir(test_cats_dir)))
 
     #Using ImageDataGenerator setup convert jpeg image to data with scaling.
-    
+    #IDG can have 8-26 arguments
+    train_datagen = ImageDataGenerator(rescale= 1./255, # convert pixel integer values
+                                       rotation_range = 40,
+                                       width_shift_range = 0.2,
+                                       height_shift_range = 0.2,
+                                       shear_range = 0.2,
+                                       zoom_range = 0.2,
+                                       horizontal_flip = True) 
+    test_datagen = ImageDataGenerator(rescale= 1./255)
+
+    #binary mode create a 1D tensor with only 2 values
+    train_generator = train_datagen.flow_from_directory(train_dir, target_size = (150,150),batch_size=20,class_mode='binary') #searches all subfolders for images
+    validation_generator = test_datagen.flow_from_directory(val_dir, target_size = (150,150),batch_size=20,class_mode='binary')
 
     #Examining the output of training generator
-    
+    for data_batch, labels_batch in train_generator:
+        print("Data Batch Shape: ",data_batch.shape)
+        print("Labels Batch Shape: ",labels_batch.shape)
+        #print(data_batch[0,0])
+        print(labels_batch[0])
+        break
 
+  
     #Model Architecture
-   
+    model = models.Sequential()
+
+    model.add(layers.Conv2D(32,(3,3),activation = 'relu',input_shape = (150,150,3)))
+    model.add(layers.MaxPool2D((2,2)))
+
+    model.add(layers.Conv2D(64,(3,3),activation = 'relu'))
+    model.add(layers.MaxPool2D((2,2)))
+
+    model.add(layers.Conv2D(128,(3,3),activation = 'relu'))
+    model.add(layers.MaxPool2D((2,2)))
+
+    model.add(layers.Conv2D(128,(3,3),activation = 'relu'))
+    model.add(layers.MaxPool2D((2,2)))
+
 
     #Fully Connected or Densely Connected Classifier Network
-    
+    model.add(layers.Flatten())
+    model.add(layers.Dropout(0.5)) #suresh finds this useful, usually do after dense but not here
+    model.add(layers.Dense(512,activation='relu'))
 
+    
     #Output layer with a single neuron since it is a binary class problem
+    model.add(layers.Dense(1,activation='sigmoid'))
+    model.summary()
    
-
     #Configure the model for running
-    
+    model.compile(loss='binary_crossentropy',optimizer = optimizers.RMSprop(lr =1e-4),metrics=['accuracy'])
 
     #Train the Model: Fit the model to the Train Data using a batch generator
+    history = model.fit_generator(train_generator,steps_per_epoch = 100,epochs = 5,
+                        validation_data = validation_generator,validation_steps = 50)#2000 images and 20 batches->1000
     
    
 
     #Saving the Trained Model
+    model.save('DogsCats.h5')
    
 
     #Plotting the loss and accuracy
-    """acc = history.history['acc']
+    acc = history.history['acc']
     val_acc = history.history['val_acc']
     loss = history.history['loss']
     val_loss = history.history['val_loss']
@@ -86,7 +124,7 @@ if __name__ == '__main__':
     plt.title('Training and Validation loss')
     plt.legend()
     #plt.imshow()
-    plt.show()"""
+    plt.show()
 
     
     
