@@ -60,17 +60,20 @@ if __name__ == '__main__':
     #Using ImageDataGenerator setup convert jpeg image to data with scaling.
     #IDG can have 8-26 arguments
     train_datagen = ImageDataGenerator(rescale= 1./255, # convert pixel integer values
-                                       rotation_range = 40,
                                        width_shift_range = 0.2,
                                        height_shift_range = 0.2,
-                                       shear_range = 0.2,
                                        zoom_range = 0.2,
                                        horizontal_flip = True) 
+    val_datagen = ImageDataGenerator(rescale= 1./255)
     test_datagen = ImageDataGenerator(rescale= 1./255)
 
     #binary mode create a 1D tensor with only 2 values
-    train_generator = train_datagen.flow_from_directory(train_dir, target_size = (150,150),batch_size=20,class_mode='binary') #searches all subfolders for images
-    validation_generator = test_datagen.flow_from_directory(val_dir, target_size = (150,150),batch_size=20,class_mode='binary')
+    train_generator = train_datagen.flow_from_directory(train_dir, target_size = (200,200),
+                                                        color_mode="grayscale",batch_size=20,class_mode='categorical') #searches all subfolders for images
+    validation_generator = val_datagen.flow_from_directory(val_dir, target_size = (200,200),
+                                                            color_mode="grayscale",batch_size=20,class_mode='categorical')
+    test_generator = test_datagen.flow_from_directory(test_dir, target_size = (200,200),
+                                                            color_mode="grayscale",batch_size=20,class_mode='categorical')
 
     #Examining the output of training generator
     for data_batch, labels_batch in train_generator:
@@ -84,10 +87,10 @@ if __name__ == '__main__':
     #Model Architecture
     model = models.Sequential()
 
-    model.add(layers.Conv2D(32,(3,3),activation = 'relu',input_shape = (150,150,3)))
+    model.add(layers.Conv2D(32,(3,3),activation = 'relu',input_shape = (200,200,1)))
     model.add(layers.MaxPool2D((2,2)))
 
-    model.add(layers.Conv2D(64,(3,3),activation = 'relu'))
+    model.add(layers.Conv2D(64,(2,2),activation = 'relu'))
     model.add(layers.MaxPool2D((2,2)))
 
     model.add(layers.Conv2D(128,(3,3),activation = 'relu'))
@@ -104,21 +107,20 @@ if __name__ == '__main__':
 
     
     #Output layer with a single neuron since it is a binary class problem
-    model.add(layers.Dense(1,activation='sigmoid'))
+    model.add(layers.Dense(4,activation='softmax'))
     model.summary()
    
     #Configure the model for running
-    model.compile(loss='binary_crossentropy',optimizer = optimizers.RMSprop(lr =1e-4),metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',optimizer = optimizers.RMSprop(lr=1e-4),metrics=['accuracy'])
 
     #Train the Model: Fit the model to the Train Data using a batch generator
-    history = model.fit_generator(train_generator,steps_per_epoch = 100,epochs = 5,
-                        validation_data = validation_generator,validation_steps = 50)#2000 images and 20 batches->1000
+    history = model.fit_generator(train_generator,steps_per_epoch = 248,epochs = 5,
+                        validation_data = validation_generator,validation_steps = 248)#2000 images and 20 batches->1000
     
    
-
     #Saving the Trained Model
-    model.save('DogsCats.h5')
-   
+    model.save('Shapes1.h5')
+
 
     #Plotting the loss and accuracy
     acc = history.history['acc']
