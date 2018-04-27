@@ -60,7 +60,7 @@ class ShapeNet3:
         model.add(layers.Conv2D(4,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
         model.add(layers.MaxPool2D((2,2)))
 
-        model.add(layers.Conv2D(3,(3,3),activation = 'relu'))
+        model.add(layers.Conv2D(2,(3,3),activation = 'relu'))
         model.add(layers.MaxPool2D((2,2)))
 
         #Fully Connected or Densely Connected Classifier Network
@@ -72,7 +72,7 @@ class ShapeNet3:
         model.add(layers.Dense(4,activation='softmax'))
         model.summary()
         
-        num_layers = 4
+        num_layers = 2
         return model,num_layers
 
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
   
     #Model Architecture(s) 
 
-    epochs = 15
+    epochs = 1
 
     #recommended epochs: 15 
     # conv(4)->conv(4)->flatten->dense(8)->dense(4)
