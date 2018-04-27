@@ -109,7 +109,7 @@ if __name__ == '__main__':
     test_triangle_dir = os.path.join(test_dir,'triangle')
 
     #Check directory paths
-    print("Total Training Circle Images = ",len(os.listdir(train_circle_dir)))
+    print("\nTotal Training Circle Images = ",len(os.listdir(train_circle_dir)))
     print("Total Validation Circle Images = ",len(os.listdir(val_circle_dir)))
     print("Total Test Circle Images = ",len(os.listdir(test_circle_dir)))
 
@@ -157,11 +157,12 @@ if __name__ == '__main__':
   
     #Model Architecture(s) 
 
-    epochs = 1
+    epochs = 15
+    LR = 1e-2
 
-    #recommended epochs: 15 
+    #recommended epochs: 20 
     # conv(4)->conv(4)->flatten->dense(8)->dense(4)
-    #model,num_layers = ShapeNet1.build(dim) 
+    model,num_layers = ShapeNet1.build(dim) 
 
    
     #recommended epochs: 5 
@@ -169,12 +170,13 @@ if __name__ == '__main__':
     #model,num_layers = ShapeNet2.build(dim)
     '''NOTE: often diverges to random chance (25%)'''
 
-
-    model,num_layers = ShapeNet3.build(dim)
+    #recommended epochs: 25
+    # conv(4)->conv(3)->flatten->dense(4)
+    #model,num_layers = ShapeNet3.build(dim)
     
    
     #Configure the model for running
-    model.compile(loss='categorical_crossentropy',optimizer = optimizers.RMSprop(lr=1e-2)
+    model.compile(loss='categorical_crossentropy',optimizer = optimizers.RMSprop(lr=LR)
                   ,metrics=['accuracy'])
 
     #Train the Model: Fit the model to the Train Data using a batch generator
