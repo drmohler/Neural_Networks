@@ -6,6 +6,75 @@ from keras import models
 from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
+import Visualization as vis #use to visualize network layers
+
+
+class ShapeNet1: 
+    @staticmethod
+    def build(dim): #dim is the square dimensions of the input image
+        model = models.Sequential()
+
+        model.add(layers.Conv2D(4,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
+        model.add(layers.AvgPool2D((2,2)))
+
+        model.add(layers.Conv2D(4,(3,3),activation = 'relu'))
+        model.add(layers.AvgPool2D((2,2)))
+
+        #Fully Connected or Densely Connected Classifier Network
+        model.add(layers.Flatten())
+        model.add(layers.Dropout(0.5)) 
+        model.add(layers.Dense(8,activation='relu'))
+
+        #Output layer with softmax classifier to for multiclass-single label problem
+        model.add(layers.Dense(4,activation='softmax'))
+        model.summary()
+        num_layers = 4
+        return model,num_layers
+
+class ShapeNet2: #has issues with divergent training (i.e. hit or miss) 
+    @staticmethod
+    def build(dim):
+        model = models.Sequential()
+
+        model.add(layers.Conv2D(16,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
+        model.add(layers.MaxPool2D((2,2)))
+
+        #Fully Connected or Densely Connected Classifier Network
+        model.add(layers.Flatten())
+        model.add(layers.Dropout(0.5))
+        model.add(layers.Dense(8,activation='relu'))
+
+        #Output layer with softmax classifier to for multiclass-single label problem
+        model.add(layers.Dense(4,activation='softmax'))
+        model.summary()
+
+        num_layers = 2
+        return model,num_layers
+
+
+class ShapeNet3: 
+    @staticmethod
+    def build(dim):
+        model = models.Sequential()
+
+        model.add(layers.Conv2D(4,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
+        model.add(layers.MaxPool2D((2,2)))
+
+        model.add(layers.Conv2D(3,(3,3),activation = 'relu'))
+        model.add(layers.MaxPool2D((2,2)))
+
+        #Fully Connected or Densely Connected Classifier Network
+        model.add(layers.Flatten())
+        #model.add(layers.Dropout(0.5)) 
+        #model.add(layers.Dense(8,activation='relu'))
+
+        #Output layer with softmax classifier to for multiclass-single label problem
+        model.add(layers.Dense(4,activation='softmax'))
+        model.summary()
+        
+        num_layers = 4
+        return model,num_layers
+
 
 if __name__ == '__main__':
     keras.__version__
@@ -55,7 +124,7 @@ if __name__ == '__main__':
     print("\nTotal Training Triangle Images = ",len(os.listdir(train_triangle_dir)))
     print("Total Validation Triangle Images = ",len(os.listdir(val_triangle_dir)))
     print("Total Test Triangle Images = ",len(os.listdir(test_triangle_dir)))
-    input("Check folders")
+   
 
     #Using ImageDataGenerator setup convert jpeg image to data with scaling.
     #IDG can have 8-26 arguments
@@ -67,12 +136,14 @@ if __name__ == '__main__':
     val_datagen = ImageDataGenerator(rescale= 1./255)
     test_datagen = ImageDataGenerator(rescale= 1./255)
 
+    dim = 50
+
     #binary mode create a 1D tensor with only 2 values
-    train_generator = train_datagen.flow_from_directory(train_dir, target_size = (200,200),
+    train_generator = train_datagen.flow_from_directory(train_dir, target_size = (dim,dim),
                                                         color_mode="grayscale",batch_size=20,class_mode='categorical') #searches all subfolders for images
-    validation_generator = val_datagen.flow_from_directory(val_dir, target_size = (200,200),
+    validation_generator = val_datagen.flow_from_directory(val_dir, target_size = (dim,dim),
                                                             color_mode="grayscale",batch_size=20,class_mode='categorical')
-    test_generator = test_datagen.flow_from_directory(test_dir, target_size = (200,200),
+    test_generator = test_datagen.flow_from_directory(test_dir, target_size = (dim,dim),
                                                             color_mode="grayscale",batch_size=20,class_mode='categorical')
 
     #Examining the output of training generator
@@ -84,42 +155,42 @@ if __name__ == '__main__':
         break
 
   
-    #Model Architecture
-    model = models.Sequential()
+    #Model Architecture(s) 
 
-    model.add(layers.Conv2D(32,(3,3),activation = 'relu',input_shape = (200,200,1)))
-    model.add(layers.MaxPool2D((2,2)))
+    epochs = 15
 
-    model.add(layers.Conv2D(64,(2,2),activation = 'relu'))
-    model.add(layers.MaxPool2D((2,2)))
+    #recommended epochs: 15 
+    # conv(4)->conv(4)->flatten->dense(8)->dense(4)
+    #model,num_layers = ShapeNet1.build(dim) 
 
-    model.add(layers.Conv2D(128,(3,3),activation = 'relu'))
-    model.add(layers.MaxPool2D((2,2)))
+   
+    #recommended epochs: 5 
+    # conv(16)->flatten->dense(8)->dense(4)
+    #model,num_layers = ShapeNet2.build(dim)
+    '''NOTE: often diverges to random chance (25%)'''
 
-    model.add(layers.Conv2D(128,(3,3),activation = 'relu'))
-    model.add(layers.MaxPool2D((2,2)))
 
-
-    #Fully Connected or Densely Connected Classifier Network
-    model.add(layers.Flatten())
-    model.add(layers.Dropout(0.5)) #suresh finds this useful, usually do after dense but not here
-    model.add(layers.Dense(512,activation='relu'))
-
+    model,num_layers = ShapeNet3.build(dim)
     
-    #Output layer with a single neuron since it is a binary class problem
-    model.add(layers.Dense(4,activation='softmax'))
-    model.summary()
    
     #Configure the model for running
-    model.compile(loss='categorical_crossentropy',optimizer = optimizers.RMSprop(lr=1e-4),metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',optimizer = optimizers.RMSprop(lr=1e-2)
+                  ,metrics=['accuracy'])
 
     #Train the Model: Fit the model to the Train Data using a batch generator
-    history = model.fit_generator(train_generator,steps_per_epoch = 248,epochs = 5,
-                        validation_data = validation_generator,validation_steps = 248)#2000 images and 20 batches->1000
+    history = model.fit_generator(train_generator,steps_per_epoch = 248,epochs = epochs,
+                        validation_data = validation_generator,validation_steps = 248)#(1240*3)/20
     
+    Loss,Accuracy  = model.evaluate_generator(test_generator)
+
+    print("Network Accuracy (Test): ",Accuracy)
    
     #Saving the Trained Model
-    model.save('Shapes1.h5')
+
+    model_file = 'Shapes1.h5'
+    model.save(model_file)
+
+    vis.visualize(model_file,dim,num_layers) #run layer visualizations
 
 
     #Plotting the loss and accuracy
