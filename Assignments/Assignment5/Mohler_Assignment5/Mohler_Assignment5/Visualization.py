@@ -86,8 +86,8 @@ def visualize(model_file,Img_dim,num_layers):
     for layer in model.layers[:num_layers]:
         layer_names.append(layer.name)
 
-    images_per_row = 2
-    for i in range(4):
+    images_per_row = 2 
+    for i in range(4): #loop over all four shapes
         for layer_name, layer_activation in zip(layer_names,act_list[i]):
             n_features = layer_activation.shape[-1] #Number of features in the feature map
             size = layer_activation.shape[1]    #Feature map shape = (l,size,size,n_feature) obtain the width
