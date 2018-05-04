@@ -8,27 +8,29 @@ from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 import Visualization as vis #use to visualize network layers
 
-
+#The classes below define the 3 tested architectures
 class ShapeNet1: 
     @staticmethod
     def build(dim): #dim is the square dimensions of the input image
         model = models.Sequential()
 
+        #convolution layer with 4 3x3 kernels, passed the input image
         model.add(layers.Conv2D(4,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
-        model.add(layers.AvgPool2D((2,2)))
+        model.add(layers.AvgPool2D((2,2))) #perform average pooling 2x2 with a stride of 2 (default) 
 
+        #second convolution layer with 4 3x3 kernels 
         model.add(layers.Conv2D(4,(3,3),activation = 'relu'))
         model.add(layers.AvgPool2D((2,2)))
 
         #Fully Connected or Densely Connected Classifier Network
-        model.add(layers.Flatten())
-        model.add(layers.Dropout(0.5)) 
-        model.add(layers.Dense(8,activation='relu'))
+        model.add(layers.Flatten()) #restructure data for FC network 
+        model.add(layers.Dropout(0.5)) #apply dropout regularization
+        model.add(layers.Dense(8,activation='relu')) #Dense layer with 8 fully connected neurons
 
         #Output layer with softmax classifier to for multiclass-single label problem
         model.add(layers.Dense(4,activation='softmax'))
-        model.summary()
-        num_layers = 4
+        model.summary() #print the network parameters
+        num_layers = 4 #parameter used for plotting activation maps in Visualization
         return model,num_layers
 
 class ShapeNet2: #has issues with divergent training (i.e. hit or miss) 
@@ -36,19 +38,20 @@ class ShapeNet2: #has issues with divergent training (i.e. hit or miss)
     def build(dim):
         model = models.Sequential()
 
+        #single convolution layer with 16 3x3 kernels, passed the input image
         model.add(layers.Conv2D(16,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
         model.add(layers.MaxPool2D((2,2)))
 
         #Fully Connected or Densely Connected Classifier Network
         model.add(layers.Flatten())
-        model.add(layers.Dropout(0.5))
-        model.add(layers.Dense(8,activation='relu'))
+        model.add(layers.Dropout(0.5)) #apply dropout regularization with a probability of 50%
+        model.add(layers.Dense(8,activation='relu')) #Dense layer with 8 fully connected neurons
 
         #Output layer with softmax classifier to for multiclass-single label problem
         model.add(layers.Dense(4,activation='softmax'))
         model.summary()
 
-        num_layers = 2
+        num_layers = 2 #parameter used for plotting activation maps in Visualization
         return model,num_layers
 
 
@@ -57,22 +60,22 @@ class ShapeNet3:
     def build(dim):
         model = models.Sequential()
 
+        #convolution layer with 4 3x3 kernels, passed the input image
         model.add(layers.Conv2D(4,(3,3),activation = 'relu',input_shape = (dim,dim,1)))
-        model.add(layers.MaxPool2D((2,2)))
+        model.add(layers.MaxPool2D((2,2))) #use maxpooling 2x2 with a stride of 2 
 
+        #second convolution layer with only 2 3x3 kernels 
         model.add(layers.Conv2D(2,(3,3),activation = 'relu'))
-        model.add(layers.MaxPool2D((2,2)))
+        model.add(layers.MaxPool2D((2,2))) 
 
-        #Fully Connected or Densely Connected Classifier Network
+        #Remove the first fully connected layer and pass directly to softmax layer
         model.add(layers.Flatten())
-        #model.add(layers.Dropout(0.5)) 
-        #model.add(layers.Dense(8,activation='relu'))
 
         #Output layer with softmax classifier to for multiclass-single label problem
         model.add(layers.Dense(4,activation='softmax'))
         model.summary()
         
-        num_layers = 2
+        num_layers = 4 #parameter used for plotting activation maps in Visualization
         return model,num_layers
 
 
@@ -88,7 +91,7 @@ if __name__ == '__main__':
     4.Rescale the pixel values (between 0 and 255) to the [0, 1] interval .
     """
     #Setting up the directory paths
-    BaseDir = "C:/shapes" #Change this to match your folders.
+    BaseDir = "C:/shapes" #the shapes folder needs to be in the root of the C drive
     train_dir = os.path.join(BaseDir,'Train')
     val_dir = os.path.join(BaseDir,'Val')
     test_dir = os.path.join(BaseDir,'Test')
@@ -108,7 +111,7 @@ if __name__ == '__main__':
     test_star_dir = os.path.join(test_dir,'star')
     test_triangle_dir = os.path.join(test_dir,'triangle')
 
-    #Check directory paths
+    #Check directory paths for each type of shape 
     print("\nTotal Training Circle Images = ",len(os.listdir(train_circle_dir)))
     print("Total Validation Circle Images = ",len(os.listdir(val_circle_dir)))
     print("Total Test Circle Images = ",len(os.listdir(test_circle_dir)))
@@ -129,16 +132,18 @@ if __name__ == '__main__':
     #Using ImageDataGenerator setup convert jpeg image to data with scaling.
     #IDG can have 8-26 arguments
     train_datagen = ImageDataGenerator(rescale= 1./255, # convert pixel integer values
+                                       #perfrom some data augmentation due to small data sets
                                        width_shift_range = 0.2,
                                        height_shift_range = 0.2,
                                        zoom_range = 0.2,
                                        horizontal_flip = True) 
-    val_datagen = ImageDataGenerator(rescale= 1./255)
-    test_datagen = ImageDataGenerator(rescale= 1./255)
+    val_datagen = ImageDataGenerator(rescale= 1./255) #use data generator to scale pixel values in validation set
+    test_datagen = ImageDataGenerator(rescale= 1./255) #use data generator to scale pixel values in test set
 
-    dim = 50
+    dim = 50 #set the square dimension to scale the images to (i.e 50x50 input images from the original 200x200) 
 
-    #binary mode create a 1D tensor with only 2 values
+    #categorical mode creates a 2D one-hot encoded labels for all three data sets
+    #since the images are black and white convert them to grayscale to use only a single channel
     train_generator = train_datagen.flow_from_directory(train_dir, target_size = (dim,dim),
                                                         color_mode="grayscale",batch_size=20,class_mode='categorical') #searches all subfolders for images
     validation_generator = val_datagen.flow_from_directory(val_dir, target_size = (dim,dim),
@@ -156,43 +161,55 @@ if __name__ == '__main__':
 
   
     #Model Architecture(s) 
+    """NOTE: Remove comment blocks below to run different models, 
+             also comment out unused architectures""" 
 
-    epochs = 15
+    epochs = 25
     LR = 1e-2
 
-    #recommended epochs: 20 
+    """
+    #------------SHAPENET1-------------------#
+    #recommended epochs: 25 
     # conv(4)->conv(4)->flatten->dense(8)->dense(4)
     model,num_layers = ShapeNet1.build(dim) 
+    """
 
-   
-    #recommended epochs: 5 
+    #------------SHAPENET2-------------------#
+    """
+    #recommended epochs: 15 
     # conv(16)->flatten->dense(8)->dense(4)
-    #model,num_layers = ShapeNet2.build(dim)
+    model,num_layers = ShapeNet2.build(dim)
     '''NOTE: often diverges to random chance (25%)'''
+    """
 
+    #------------SHAPENET3-------------------#
+    
     #recommended epochs: 25
     # conv(4)->conv(3)->flatten->dense(4)
-    #model,num_layers = ShapeNet3.build(dim)
+    model,num_layers = ShapeNet3.build(dim)
     
-   
-    #Configure the model for running
+    
+       
+    #Configure the model for running using categorical cross entropy for multiclass-single label problem
+    #use RMS prop optimizer from empirical performance testing
     model.compile(loss='categorical_crossentropy',optimizer = optimizers.RMSprop(lr=LR)
                   ,metrics=['accuracy'])
 
     #Train the Model: Fit the model to the Train Data using a batch generator
     history = model.fit_generator(train_generator,steps_per_epoch = 248,epochs = epochs,
-                        validation_data = validation_generator,validation_steps = 248)#(1240*3)/20
+                        validation_data = validation_generator,validation_steps = 248)#(1240*3)/20 = 248 steps
     
-    Loss,Accuracy  = model.evaluate_generator(test_generator)
+    Loss,Accuracy  = model.evaluate_generator(test_generator) # Calculate the performance of the network on the test images
 
-    print("Network Accuracy (Test): ",Accuracy)
+    print("\nNetwork Accuracy (Test): ",Accuracy)
    
     #Saving the Trained Model
 
     model_file = 'Shapes1.h5'
     model.save(model_file)
 
-    vis.visualize(model_file,dim,num_layers) #run layer visualizations
+    vis.visualize(model_file,dim,num_layers) #run layer visualizations 
+    #(this is imported from a file in the same directory: Visualization.py)
 
 
     #Plotting the loss and accuracy

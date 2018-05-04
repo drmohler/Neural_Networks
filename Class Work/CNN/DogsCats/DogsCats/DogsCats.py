@@ -18,7 +18,7 @@ if __name__ == '__main__':
     4.Rescale the pixel values (between 0 and 255) to the [0, 1] interval .
     """
     #Setting up the directory paths
-    BaseDir = 'C:/DRM_NeuralNets/Neural_Networks/Class Work/CNN/DogsCats/DogsCats' #Change this to match your folders.
+    BaseDir = 'C:/dmohler/NeuralNets/gitCode/Class Work/CNN/DogsCats/DogsCats' #Change this to match your folders.
     train_dir = os.path.join(BaseDir,'Train')
     val_dir = os.path.join(BaseDir,'Val')
     test_dir = os.path.join(BaseDir,'Test')

@@ -18,7 +18,7 @@ def visualize(model_file,Img_dim,num_layers):
     BaseDir = 'C:/shapes' #navigate to shapes directory 
     test_dir = os.path.join(BaseDir,'Test')
     test_star_dir = os.path.join(test_dir,'star')
-    test_star_dir = os.path.join(test_star_dir,'2480.png')
+    test_star_dir = os.path.join(test_star_dir,'2480.png') #hardcode the first image in directory 
 
     test_circle_dir = os.path.join(test_dir,'circle')
     test_circle_dir = os.path.join(test_circle_dir,'2480.png')
@@ -29,6 +29,7 @@ def visualize(model_file,Img_dim,num_layers):
     test_sq_dir = os.path.join(test_dir,'square')
     test_sq_dir = os.path.join(test_sq_dir,'2480.png')
 
+    #list of image directories for images to visualize 
     imdir = [test_star_dir,test_circle_dir,test_tri_dir,test_sq_dir]
 
     #test_dogs_dir = os.path.join(test_dir,'TestDogs')
@@ -40,7 +41,7 @@ def visualize(model_file,Img_dim,num_layers):
     img3 = image.load_img(imdir[2],target_size=(Img_dim,Img_dim),grayscale=True)
     img4 = image.load_img(imdir[3],target_size=(Img_dim,Img_dim),grayscale=True)
 
-    Images = [img1,img2,img3,img4] 
+    Images = [img1,img2,img3,img4] #creat a list of processed images 
     
     img_tensors = []
     for i in range(4):
@@ -50,7 +51,7 @@ def visualize(model_file,Img_dim,num_layers):
         img_tensors.append(img_tensor)
     
     
-    #Display test images (1 of each shape) 
+    #Display test images (1 of each shape) in a row  
     f,axarr = plt.subplots(1,4)
     axarr[0].imshow(Images[0])
     axarr[1].imshow(Images[1])
@@ -59,34 +60,27 @@ def visualize(model_file,Img_dim,num_layers):
     plt.show()
     
     
-    layer_outputs = [layer.output for layer in model.layers[:num_layers]]#get the first 2 layers
+    layer_outputs = [layer.output for layer in model.layers[:num_layers]]#get the appropriate number of layers for the network 
     activation_model = models.Model(input=model.input,output = layer_outputs)
 
-    #Provide the input as the test image of the cat and obtain the activations
+    #Provide the input as the test image of the shape and obtain the activations
     act_list = []
     for i in range(4):
-        activations = activation_model.predict(img_tensors[i]) #predict only takes numpy array
+        activations = activation_model.predict(img_tensors[i]) #use network to predict what the patterns should be
         act_list.append(activations) 
 
-    #Obtain individual layer activations and display their shape and as images
+    #Obtain individual layer activations and display their shape as images
     FLact = []
     for i in range(4): 
         first_layer_activation = act_list[i][0]
         FLact.append(first_layer_activation)
     
-    '''channel_name = []
-    for i in range(first_layer_activation.shape[3]):
-        plt.matshow(first_layer_activation[0,:,:,i],cmap = 'viridis')#iterate through the feature maps
-        channel_name.append(i)
-        plt.title(channel_name[i])
-        plt.show()'''
-
     #Visualizing every channel in  intermediate layers
     layer_names = []
     for layer in model.layers[:num_layers]:
         layer_names.append(layer.name)
 
-    images_per_row = 2 
+    images_per_row = 2 #format activation maps in to rows of 2 by num_layers
     for i in range(4): #loop over all four shapes
         for layer_name, layer_activation in zip(layer_names,act_list[i]):
             n_features = layer_activation.shape[-1] #Number of features in the feature map
@@ -102,7 +96,7 @@ def visualize(model_file,Img_dim,num_layers):
                     channel_image /= channel_image.std()
                     channel_image *= 64
                     channel_image += 128
-                    channel_image = np.clip(channel_image,0,255).astype('uint8')
+                    channel_image = np.clip(channel_image,0,255).astype('uint8') #ensure data is in std image range (0,255)
                     display_grid[col*size:(col+1)*size,row*size: (row+1)*size] = channel_image
 
             scale = 1./size
