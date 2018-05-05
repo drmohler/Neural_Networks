@@ -9,15 +9,15 @@ of audio recordings
 
 import os, shutil
 import keras
-from keras.layers import *  
+from keras.layers import Conv2D,MaxPool2D,Flatten,Dense 
 from keras import models
 from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
-
+import Visualization as vis #import the visualization file 
 
 #Setting up the directory paths
-BaseDir = os.getcwd()+'/CatsDogsPSD' #current working directory
+BaseDir = 'C:/CatsDogsPSD' #use dataset at root of C: drive
     
 train_dir = os.path.join(BaseDir,'train')
 val_dir = os.path.join(BaseDir,'val')
@@ -58,33 +58,48 @@ val_datagen = ImageDataGenerator(rescale=1./255)
 test_datagen = ImageDataGenerator(rescale=1./255)
 
 dim = 200
-input()
-train_generator = train_datagen.flow_from_directory(train_dir,target_size=(dim,dim),
-                                                    batch_size=(TrainDog+TrainCat),class_mode = 'binary')
-val_generator = train_datagen.flow_from_directory(val_dir,target_size=(dim,dim),
-                                                    batch_size=(ValDog+ValCat),class_mode = 'binary')
-test_generator = train_datagen.flow_from_directory(test_dir,target_size=(dim,dim),
-                                                    batch_size=(TestDog+TestCat),class_mode = 'binary')
 
-ImgDim = 200
+train_generator = train_datagen.flow_from_directory(train_dir,target_size=(dim,dim),
+                                                    batch_size=10,class_mode = 'binary')
+val_generator = train_datagen.flow_from_directory(val_dir,target_size=(dim,dim),
+                                                    batch_size=10,class_mode = 'binary')
+test_generator = train_datagen.flow_from_directory(test_dir,target_size=(dim,dim),
+                                                    batch_size=10,class_mode = 'binary')
+'''(TrainDog+TrainCat)'''
+'''(ValDog+ValCat)'''
+'''(TestDog+TestCat)'''
 
 #Define the model architecture 
 model = models.Sequential()
 
-model.add(Conv2D(512,(3,3),activation = 'relu',input_shape = (ImgDim,ImgDim,3)))
+model.add(Conv2D(16,(3,3),activation = 'relu',input_shape = (dim,dim,3)))
+model.add(MaxPool2D((2,2)))
+
+model.add(Conv2D(32,(3,3),activation = 'relu'))
+model.add(MaxPool2D((2,2)))
+
+model.add(Conv2D(32,(3,3),activation = 'relu'))
 model.add(MaxPool2D((2,2)))
 
 model.add(Flatten())
-model.add(Dense(512,activation='relu'))
+model.add(Dense(8,activation='relu'))
 model.add(Dense(1,activation = 'sigmoid'))
 model.summary()
+num_layers = 6
 
-model.compile(loss='binary_crossentropy',optimizer=optimizers.SGD(),metrics=['accuracy'])
+model.compile(loss='binary_crossentropy',optimizer=optimizers.Adagrad(),metrics=['accuracy'])
 
-history = model.fit_generator(train_generator,steps_per_epoch = 1,epochs = 15,
-                        validation_data = val_generator,validation_steps = 1)
 
-model.save('Mohler_P1.h5')
+history = model.fit_generator(train_generator,steps_per_epoch = (TrainDog+TrainCat)/10,epochs = 15,
+                        validation_data = val_generator,validation_steps = (ValDog+ValCat))
+
+test_loss, test_acc = model.evaluate_generator(test_generator) #pass the test set through the trained
+                                                               #model to get test accuracy 
+
+filename = 'Mohler_P1.h5'
+model.save(filename)
+
+vis.visualize(filename,dim,num_layers)
 
 #Plotting the loss and accuracy
 acc = history.history['acc']
