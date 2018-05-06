@@ -9,12 +9,61 @@ of audio recordings
 
 import os, shutil
 import keras
-from keras.layers import Conv2D,MaxPool2D,Flatten,Dense 
+from keras.layers import Conv2D,MaxPool2D,Flatten,Dense,Dropout 
 from keras import models
 from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 import Visualization as vis #import the visualization file 
+
+
+class Net1(): #current best is 86.36% accurate 
+    @staticmethod
+    def build():
+        model = models.Sequential()
+
+        model.add(Conv2D(32,(3,3),activation = 'relu',input_shape = (dim,dim,3)))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Conv2D(64,(3,3),activation = 'relu'))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Conv2D(32,(3,3),activation = 'relu'))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Flatten())
+        model.add(Dense(128,activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(1,activation = 'sigmoid'))
+        model.summary()
+        num_layers = 6
+        return model, num_layers
+
+class Net2(): #current best is 
+    @staticmethod
+    def build():
+        model = models.Sequential()
+
+        model.add(Conv2D(16,(3,3),activation = 'relu',input_shape = (dim,dim,3)))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Conv2D(24,(3,3),activation = 'relu'))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Conv2D(36,(3,3),activation = 'relu'))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Conv2D(16,(3,3),activation = 'relu'))
+        model.add(MaxPool2D((2,2)))
+
+        model.add(Flatten())
+
+        model.add(Dense(256,activation='relu'))
+        model.add(Dropout(0.5))
+        model.add(Dense(1,activation = 'sigmoid'))
+        model.summary()
+        num_layers = 8
+        return model, num_layers
 
 #Setting up the directory paths
 BaseDir = 'C:/CatsDogsPSD' #use dataset at root of C: drive
@@ -70,31 +119,18 @@ test_generator = train_datagen.flow_from_directory(test_dir,target_size=(dim,dim
 '''(TestDog+TestCat)'''
 
 #Define the model architecture 
-model = models.Sequential()
+model , num_layers = Net2.build()
 
-model.add(Conv2D(16,(3,3),activation = 'relu',input_shape = (dim,dim,3)))
-model.add(MaxPool2D((2,2)))
-
-model.add(Conv2D(32,(3,3),activation = 'relu'))
-model.add(MaxPool2D((2,2)))
-
-model.add(Conv2D(32,(3,3),activation = 'relu'))
-model.add(MaxPool2D((2,2)))
-
-model.add(Flatten())
-model.add(Dense(8,activation='relu'))
-model.add(Dense(1,activation = 'sigmoid'))
-model.summary()
-num_layers = 6
-
-model.compile(loss='binary_crossentropy',optimizer=optimizers.Adagrad(),metrics=['accuracy'])
+model.compile(loss='binary_crossentropy',optimizer=optimizers.Adamax(),metrics=['accuracy'])
 
 
-history = model.fit_generator(train_generator,steps_per_epoch = (TrainDog+TrainCat)/10,epochs = 15,
+history = model.fit_generator(train_generator,steps_per_epoch = (TrainDog+TrainCat)//10,epochs = 15,
                         validation_data = val_generator,validation_steps = (ValDog+ValCat))
 
 test_loss, test_acc = model.evaluate_generator(test_generator) #pass the test set through the trained
                                                                #model to get test accuracy 
+
+print("Network Accuracy (TEST): ", test_acc)
 
 filename = 'Mohler_P1.h5'
 model.save(filename)

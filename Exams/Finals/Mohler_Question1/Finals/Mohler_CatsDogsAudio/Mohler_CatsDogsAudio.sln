@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2036
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Mohler_CatsDogsAudio", "Mohler_CatsDogsAudio\Mohler_CatsDogsAudio.pyproj", "{84ADEEB2-5A24-4B21-A036-985DB13DD097}"
 EndProject
@@ -16,5 +16,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E4253CF7-8B03-4CE3-8D92-C40E205BF2A9}
 	EndGlobalSection
 EndGlobal

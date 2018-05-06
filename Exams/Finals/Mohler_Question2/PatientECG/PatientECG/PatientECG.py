@@ -98,13 +98,13 @@ if __name__ == '__main__':
     ValX = NormalizeData(ValX)
     TestX = NormalizeData(TestX) 
 
-    num_epochs = 1000
+    num_epochs = 12000
     cost_value = [] #empty list to store cost at each epoch 
 
-    input()
+    
     inputs = trainX.shape[1]
     iNodes = tf.placeholder(tf.float32,[None,inputs])
-    d_values = tf.placeholder(tf.float32,[None,1]) #placeholder for test labels
+    d_values = tf.placeholder(tf.float32,shape=(None,1)) #placeholder for test labels
 
     #set up necessary variables for dense network 
 
@@ -114,23 +114,35 @@ if __name__ == '__main__':
     w1 = tf.Variable(tf.truncated_normal([inputs,hidden1]))
     b1 = tf.Variable(tf.truncated_normal([1,hidden1]))
 
-    w2 = tf.Variable(tf.truncated_normal([hidden1,output]))
-    b2 = tf.Variable(tf.truncated_normal([1,output]))
+    hidden2 = 16
+    w2 = tf.Variable(tf.truncated_normal([hidden1,hidden2]))
+    b2 = tf.Variable(tf.truncated_normal([1,hidden2]))
+
+
+    w3 = tf.Variable(tf.truncated_normal([hidden2,output]))
+    b3 = tf.Variable(tf.truncated_normal([1,output]))
 
     #Implement the forward pass for the network
     i1 = tf.add(tf.matmul(iNodes,w1),b1) # WX + b 
     y1 = sigmoid(i1)
 
     i2 = tf.add(tf.matmul(y1,w2),b2)
-    y = sigmoid(i2)
+    y2 = sigmoid(i2)
+
+    i3 = tf.add(tf.matmul(y2,w3),b3)
+    y = sigmoid(i3)
 
     #Implement Back Propagation
     error = tf.subtract(y,d_values)
 
-    LR = tf.constant(0.01)
-    cost = tf.reduce_mean(tf.square(error))
+    LR = tf.constant(1e-5)
+    cost = tf.reduce_mean(tf.squared_difference(y,d_values))
+    #cost = tf.reduce_mean(tf.square(error))
 
-    step = tf.train.GradientDescentOptimizer(LR).minimize(cost)
+    #step = tf.train.GradientDescentOptimizer(LR).minimize(cost)
+    step = tf.train.RMSPropOptimizer(LR).minimize(cost)
+    #step = tf.train.AdamOptimizer(LR).minimize(cost)
+    
 
     init = tf.global_variables_initializer()
 
@@ -147,62 +159,47 @@ if __name__ == '__main__':
             TrainMiss = 0
             ValMiss = 0            
             TestMiss = 0 
-            for j in range(trainX.size[1]):
-                if y_predTrain[j]>0.5:
-                    y_predTrain[j] = 1.0
-                else:
-                    y_predTrain[j] = 0.0
 
-                if y_predTrain != trainY: 
-                    TrainMiss = TrainMiss + 1 
+            TrainMiss = MisClassifications(y_predTrain,trainY)
+            ValMiss = MisClassifications(y_predVal,ValY)
 
-            for j in range(ValX.size[1]):
-                if y_predVal[j]>0.5:
-                    y_predVal[j] = 1.0
-                else:
-                    y_predVal[j] = 0.0
+            #for j in range(trainX.shape[1]):
+            #    if y_predTrain[j]>0.5:
+            #        y_predTrain[j] = 1.0
+            #    else:
+            #        y_predTrain[j] = 0.0
 
-                if y_predVal != ValY: 
-                    ValMiss = ValMiss + 1 
+            #    if y_predTrain[j] != trainY[j]: 
+            #        TrainMiss = TrainMiss + 1 
+
+            #for j in range(ValX.shape[1]):
+            #    if y_predVal[j]>0.5:
+            #        y_predVal[j] = 1.0
+            #    else:
+            #        y_predVal[j] = 0.0
+
+            #    if y_predVal[j] != ValY[j]: 
+            #        ValMiss = ValMiss + 1 
             Train_Acc = ((trainX.shape[1]-TrainMiss)*100)/trainX.shape[1]
             Val_Acc = ((ValX.shape[1]-ValMiss)*100)/ValX.shape[1]
 
-            if i%100 == 0:
-                print("Epoch: ",i,"\tMSE: ",cost_value[-1],"\tTrain_Acc: %",Train_Acc,"\tVal_Acc: %",Val_Acc)
+            if i%500 == 0:
+                print("Epoch: ",i,"\tMSE: ",cost_value[-1],"\tTrain_Acc: %",
+                      "{0:.2f}".format(Train_Acc),"\tVal_Acc: %","{0:.2f}".format(Val_Acc))
         y_predTest = sess.run(y,{iNodes:TestX}) # after last epoch run test data through model
-             
-    for j in range(TestX.size[1]):
-                if y_predTest[j]>0.5:
-                    y_predTest[j] = 1.0
-                else:
-                    y_predTest[j] = 0.0
+      
+    TestMiss = MisClassifications(y_predTest,TestY)    
+    #for j in range(TestX.shape[1]):
+    #            if y_predTest[j]>0.5:
+    #                y_predTest[j] = 1.0
+    #            else:
+    #                y_predTest[j] = 0.0
 
-                if y_predTest != ValY: 
-                    TestMiss = TestMiss + 1 
+    #            if y_predTest[j] != ValY[j]: 
+    #                TestMiss = TestMiss + 1 
 
-    print("Training Misclassifications: ", TrainMiss)
+    print("\nTraining Misclassifications: ", TrainMiss)
     print("Validation Misclassifications: ", ValMiss)
     print("Test Misclassifications: ", TestMiss)
     print("\nNetwork Accuracy: %", ((TestX.shape[1]-TestMiss)*100)/TestX.shape[1])
     
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
